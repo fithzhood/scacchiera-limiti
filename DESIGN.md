@@ -1,0 +1,64 @@
+# DESIGN.md — Scacchiera ∞
+
+## Soggetto e persone
+Gioco per imparare a leggere limiti e valori di una funzione. Studenti di quarta/quinta superiore,
+su telefono o PC, in classe o a casa. Deve sembrare un foglio di lavoro, non un gadget.
+
+## Regola del gioco
+Scacchiera 9×9, coordinate −∞, −3 … +3, +∞ su entrambi gli assi (x verso destra, y verso l'alto).
+Ogni condizione si traduce in un segno su una casella:
+- f(a) = b → pallino pieno in (a, b)
+- lim x→a f(x) = b → pallino vuoto in (a, b)
+- lim x→a f(x) = ±∞ → tratteggio verticale in entrambe le metà della casella (a, ±∞)
+- lim x→a⁻ / x→a⁺ f(x) = ±∞ → tratteggio verticale nella metà sinistra / destra di (a, ±∞).
+  Le caselle a ±∞ con x finito sono divise da una linea sottile: è la retta x = a.
+- lim x→±∞ f(x) = b → tratteggio orizzontale in (±∞, b)
+- lim x→+∞ f(x) = +∞ e lim x→−∞ f(x) = −∞ → tratteggio in salita nell'angolo
+- lim x→+∞ f(x) = −∞ e lim x→−∞ f(x) = +∞ → tratteggio in discesa nell'angolo
+Esercizio: 4-6 condizioni coerenti con una funzione. Al massimo un salto (limite ≠ valore)
+o una coppia di limiti laterali per esercizio.
+
+Esercizio risolto (o soluzione mostrata): compaiono gli asintoti tratteggiati, poi il grafico di una
+funzione che rispetta le condizioni si disegna da sinistra a destra e ogni segno lampeggia quando
+la traccia lo raggiunge. Il grafico resta nella parte finita e si aggancia all'estremo
+interno di ogni tratteggio, con la sua direzione: il tratteggio resta visibile e continua la curva.
+Assi sottili, così i tratteggi che cadono sugli assi si vedono. Senza condizioni a ±∞ il grafico si ferma al bordo della colonna ±∞.
+
+## Livelli (3 esercizi risolti per passare al successivo, la soluzione mostrata non conta)
+1 Valori · 2 Valori e limiti al finito · 3 Asintoti orizzontali · 4 Asintoti verticali ·
+5 Limiti laterali e limiti infiniti all'infinito · 6 tutto, senza colori ·
+7 senza scacchiera, solo assi · 8 tutto, solo assi.
+Livelli 7-8: foglio uniforme, numeri e tacche sugli assi (sopra i segni, con alone), una linea
+puntinata separa la fascia ±∞ dalla parte finita. Il tasto Prossimo livello compare a livello superato.
+Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
+L'avanzamento resta nel browser (localStorage).
+Due modalità: Percorso (livelli in ordine, si sbloccano) e Allenamento (qualunque livello, conta
+solo gli esercizi della visita e non tocca il percorso). La modalità scelta si ricorda.
+
+## Colori
+- Carta #DCE3E8 / Ardesia #8FA3B3 — caselle
+- Carta e ardesia schiarite — righe e colonne ±∞
+- Inchiostro #1F2A33 — testo, assi, segni
+- Evidenziatore #E0A526 — strumento scelto, focus
+- Giusto #2F7D4F, Sbagliato #C2412D, Soluzione #B8660B — solo dopo il controllo
+- Asse x #1F5FBF (blu), Asse y #C62D2D (rosso) — indizio nei livelli 1-5
+- Funzione #0A6E6C — il grafico, con un alone chiaro per staccarsi dalle caselle
+
+## Tipografia
+Etichette e messaggi in monospace di sistema. Condizioni in font matematico di sistema
+(Cambria Math): sono formule e devono somigliare a quelle del libro.
+
+## Dettaglio caratterizzante
+Assi cartesiani in inchiostro, frecce piccole verso +∞, che tagliano a metà la riga y = 0 e
+la colonna x = 0. I segni stanno sopra gli assi.
+
+## Glossario
+"condizione", "segno", "casella", "esercizio". Segni: pallino pieno, pallino vuoto,
+tratteggio verticale / orizzontale / in salita / in discesa.
+
+## Tono
+Inizio: "Piazza un segno per ogni condizione, poi premi Controlla."
+Controllo: quante condizioni sono a posto, quanti segni in più. Successo: "Esercizio risolto".
+
+## Default
+Strumento iniziale: pallino pieno. Toccare una casella con lo stesso segno lo toglie.

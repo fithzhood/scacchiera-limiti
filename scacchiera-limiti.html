@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scacchiera ∞</title>
+<style>
+  :root {
+    --carta: #DCE3E8;
+    --ardesia: #8FA3B3;
+    --carta-inf: #EEF2F5;
+    --ardesia-inf: #B8C5CF;
+    --inchiostro: #1F2A33;
+    --inchiostro-tavola: #1F2A33;
+    --fondo: #F3F5F7;
+    --etichetta: #4B5A66;
+    --giusto: #2F7D4F;
+    --sbagliato: #C2412D;
+    --soluzione: #B8660B;
+    --funzione: #0A6E6C;
+    --asse-x: #1F5FBF;
+    --asse-y: #C62D2D;
+    --evidenziatore: #E0A526;
+    --pallino-fondo: #F8FAFB;
+    --formula: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fondo: #151B21;
+      --inchiostro: #E6ECF0;
+      --etichetta: #9AABB8;
+      --giusto: #5DBB84;
+      --sbagliato: #EE7A64;
+      --asse-x: #7DAAF2;
+      --asse-y: #F08484;
+    }
+  }
+  /* indizio dei colori: blu i valori di x, rosso i valori di y (solo nei primi livelli) */
+  body.colori .cx { color: var(--asse-x); }
+  body.colori .cy { color: var(--asse-y); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--fondo);
+    color: var(--inchiostro);
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  main {
+    width: min(100vw - 32px, 560px);
+    margin: 16px auto;
+    display: grid;
+    gap: 20px;
+  }
+  @media (min-width: 900px) {
+    main {
+      width: min(100vw - 48px, 940px);
+      grid-template-columns: minmax(0, 560px) 340px;
+      align-items: start;
+      margin-top: 40px;
+    }
+  }
+
+  /* ---------- scacchiera ---------- */
+  .tavola {
+    display: grid;
+    grid-template-columns: 0.7fr repeat(9, 1fr) 0.7fr;
+    grid-template-rows: 0.7fr repeat(9, 1fr) 0.7fr;
+    aspect-ratio: 1;
+    width: 100%;
+    position: relative;
+  }
+  .etichetta {
+    display: grid;
+    place-items: center;
+    font-size: clamp(10px, 2.6vw, 14px);
+    color: var(--etichetta);
+    user-select: none;
+  }
+  .etichetta.inf { font-size: clamp(13px, 3.6vw, 19px); }
+  .casella {
+    border: 0;
+    padding: 0;
+    background: var(--carta);
+    position: relative;
+    color: var(--inchiostro-tavola);
+  }
+  .casella.scura { background: var(--ardesia); }
+  .casella.inf { background: var(--carta-inf); }
+  .casella.inf.scura { background: var(--ardesia-inf); }
+  /* caselle a ±∞ con x finito: divise dalla retta x = a */
+  .casella.divisa::after {
+    content: "";
+    position: absolute;
+    left: calc(50% - 0.5px);
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(31, 42, 51, 0.38);
+    pointer-events: none;
+  }
+  .posto { cursor: pointer; color: var(--inchiostro-tavola); }
+  .posto:disabled { cursor: default; }
+  .posto:focus-visible { outline: 3px solid var(--evidenziatore); outline-offset: -3px; z-index: 4; }
+  .meta {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+  .meta.sx { left: 0; }
+  .meta.dx { left: 50%; }
+  .posto svg {
+    position: absolute;
+    inset: 8%;
+    width: 84%;
+    height: 84%;
+    z-index: 3; /* sopra assi e grafico */
+  }
+  .meta svg { inset: 8% 0; width: 100%; }
+  .posto.giusto { color: var(--giusto); }
+  .posto.sbagliato { color: var(--sbagliato); }
+  .posto.soluzione { color: var(--soluzione); }
+  @media (prefers-color-scheme: dark) {
+    .posto.giusto { color: #22693F; }
+    .posto.sbagliato { color: #B3321F; }
+  }
+  .posto.lampo svg { animation: lampo 650ms ease-out; }
+  @keyframes lampo {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.5); color: var(--evidenziatore); filter: drop-shadow(0 0 3px var(--evidenziatore)); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .posto.lampo svg { animation: none; }
+  }
+
+  /* livelli avanzati: un foglio uniforme, numeri sugli assi invece che sui bordi */
+  body.solo-assi .tavola .casella { background: transparent; }
+  /* il foglio sta dietro le caselle (la zona 9×9 è 9/10.4 della tavola), così non restano fessure */
+  body.solo-assi .tavola {
+    background: linear-gradient(var(--carta-inf), var(--carta-inf)) 50% 50% / 86.54% 86.54% no-repeat;
+  }
+  body.solo-assi .tavola .casella.divisa::after { background: rgba(31, 42, 51, 0.16); }
+  body.solo-assi .tavola .posto:hover { background: rgba(31, 42, 51, 0.06); }
+  body.solo-assi .etichetta { visibility: hidden; }
+  body:not(.solo-assi) .numeri { display: none; }
+  /* i numeri stanno sopra i segni, con un alone, per restare leggibili */
+  .tavola .numeri { z-index: 4; }
+  .numeri text {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 3.1px;
+    fill: var(--inchiostro-tavola);
+    stroke: var(--carta-inf);
+    stroke-width: 0.9px;
+    paint-order: stroke;
+  }
+  .numeri .tacca { stroke: var(--inchiostro-tavola); stroke-width: 0.32; }
+  .numeri .confine { stroke: var(--inchiostro-tavola); stroke-width: 0.3; stroke-dasharray: 0.6 1.2; opacity: 0.5; }
+
+  .sopra {
+    position: absolute;
+    grid-column: 2 / 11;
+    grid-row: 2 / 11;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    color: var(--inchiostro-tavola);
+  }
+  .asintoto {
+    stroke: var(--inchiostro-tavola);
+    stroke-width: 0.5;
+    stroke-dasharray: 2 1.6;
+    opacity: 0;
+    transition: opacity 400ms;
+  }
+  .grafico.visibile .asintoto { opacity: 0.75; }
+  .alone { fill: none; stroke: var(--pallino-fondo); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; opacity: 0.85; }
+  .tratto { fill: none; stroke: var(--funzione); stroke-width: 1.1; stroke-linejoin: round; stroke-linecap: round; }
+
+  /* ---------- pannello ---------- */
+  .pannello { display: grid; gap: 18px; }
+  /* interruttore a due posizioni, un solo bordo attorno */
+  .modi {
+    display: inline-flex;
+    border: 1.5px solid var(--etichetta);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .modi button {
+    font: inherit;
+    font-size: 14px;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 0;
+    background: transparent;
+    color: var(--inchiostro);
+    cursor: pointer;
+  }
+  .modi button[aria-pressed="true"] { background: var(--inchiostro); color: var(--fondo); }
+  .modi button:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: -2px; }
+  .livelli { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; max-width: 400px; }
+  .livelli button {
+    font: inherit;
+    font-size: 15px;
+    padding: 0;
+    height: 40px;
+    border-radius: 6px;
+    border: 1.5px solid var(--etichetta);
+    background: transparent;
+    color: var(--inchiostro);
+    cursor: pointer;
+  }
+  .livelli button[aria-pressed="true"] {
+    background: var(--inchiostro);
+    color: var(--fondo);
+    border-color: var(--inchiostro);
+  }
+  .livelli button:disabled { opacity: 0.3; cursor: default; }
+  .livello-info { margin: 8px 0 0; font-size: 14px; line-height: 1.4; }
+  .livello-info .avanzamento { color: var(--etichetta); }
+  h2 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--etichetta);
+  }
+  .condizioni {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .condizioni li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    align-items: center;
+    font-family: var(--formula);
+    font-size: 21px;
+    min-height: 40px;
+  }
+  .condizioni li .esito { width: 16px; height: 16px; }
+  .condizioni li.giusto .esito { color: var(--giusto); }
+  .condizioni li.sbagliato .esito { color: var(--sbagliato); }
+  .lim {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    margin-right: 0.2em;
+  }
+  .lim sub { font-size: 0.6em; margin-top: 2px; }
+  .lim sup { font-size: 0.85em; vertical-align: 0.45em; line-height: 0; }
+
+  .strumenti {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .strumento {
+    aspect-ratio: 1;
+    max-height: 56px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: var(--carta);
+    color: var(--inchiostro-tavola);
+    cursor: pointer;
+    padding: 6px;
+  }
+  .strumento svg { width: 100%; height: 100%; display: block; }
+  .strumento[aria-pressed="true"] {
+    border-color: var(--evidenziatore);
+    background: #F6E7BF;
+  }
+  .strumento:focus-visible { outline: 2px solid var(--inchiostro); outline-offset: 2px; }
+
+  .azioni { display: flex; flex-wrap: wrap; gap: 8px; }
+  .azioni button {
+    font: inherit;
+    font-size: 15px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1.5px solid var(--etichetta);
+    background: transparent;
+    color: var(--inchiostro);
+  }
+  .azioni .primario {
+    background: var(--inchiostro);
+    color: var(--fondo);
+    border-color: var(--inchiostro);
+  }
+  .azioni button[hidden] { display: none; }
+  .azioni button:disabled { opacity: 0.35; cursor: default; }
+  .messaggio { margin: 0; min-height: 1.4em; font-size: 15px; line-height: 1.4; }
+  .messaggio.risolto { color: var(--giusto); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <div class="tavola" id="tavola" aria-label="Scacchiera 9 per 9"></div>
+
+  <section class="pannello">
+    <div>
+      <div class="modi" id="modi" role="group" aria-label="Modalità">
+        <button data-modo="percorso">Percorso</button>
+        <button data-modo="allenamento">Allenamento</button>
+      </div>
+      <h2 id="titolo-livelli">Livello</h2>
+      <div class="livelli" id="livelli" role="group" aria-labelledby="titolo-livelli"></div>
+      <p class="livello-info"><span id="livello-nome"></span><br><span class="avanzamento" id="avanzamento"></span></p>
+    </div>
+    <div>
+      <h2>Condizioni</h2>
+      <ol class="condizioni" id="condizioni"></ol>
+    </div>
+    <div>
+      <h2 id="titolo-strumenti">Segno da piazzare</h2>
+      <div class="strumenti" id="strumenti" role="group" aria-labelledby="titolo-strumenti"></div>
+    </div>
+    <div class="azioni">
+      <button id="prossimo" hidden>Prossimo livello</button>
+      <button class="primario" id="controlla">Controlla</button>
+      <button id="soluzione" hidden>Mostra soluzione</button>
+      <button id="nuovo">Nuovo esercizio</button>
+    </div>
+    <p class="messaggio" id="messaggio" aria-live="polite"></p>
+  </section>
+</main>
+<script>
+  // Indici 0..8 sulla scacchiera: 0 = −∞, 1..7 = −3..+3, 8 = +∞.
+  // Coordinate del grafico (u, v) in unità di casella: u = 0..9 da sinistra, v = 0..9 dal basso.
+  const N = 9;
+  const ETICHETTE = ["−∞", "−3", "−2", "−1", "0", "+1", "+2", "+3", "+∞"];
+  const MENO_INF = 0, PIU_INF = 8;
+  const DURATA_TRACCIA = 2800;   // ms per attraversare la scacchiera
+  const PAUSA_ASINTOTI = 500;    // ms fra comparsa degli asintoti e inizio della traccia
+  const riduciMoto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function num(i) {
+    if (i === MENO_INF) return "−∞";
+    if (i === PIU_INF) return "+∞";
+    const v = i - 4;
+    return v < 0 ? "−" + -v : String(v);
+  }
+
+  // ---------- segni ----------
+  const SEGNI = {
+    pieno:       { nome: "Pallino pieno",          svg: '<circle cx="10" cy="10" r="5" fill="currentColor"/>' },
+    vuoto:       { nome: "Pallino vuoto",          svg: '<circle cx="10" cy="10" r="4.4" style="fill: var(--pallino-fondo)" stroke="currentColor" stroke-width="1.8"/>' },
+    verticale:   { nome: "Tratteggio verticale",   svg: '<line x1="10" y1="1.5" x2="10" y2="18.5"/>' },
+    orizzontale: { nome: "Tratteggio orizzontale", svg: '<line x1="1.5" y1="10" x2="18.5" y2="10"/>' },
+    sale:        { nome: "Tratteggio in salita",   svg: '<line x1="3" y1="17" x2="17" y2="3"/>' },
+    scende:      { nome: "Tratteggio in discesa",  svg: '<line x1="3" y1="3" x2="17" y2="17"/>' },
+  };
+  function disegnoSegno(tipo, meta = false) {
+    const pallino = tipo === "pieno" || tipo === "vuoto";
+    const box = meta ? "5 0 10 20" : "0 0 20 20";
+    return `<svg viewBox="${box}" aria-hidden="true" stroke="currentColor" stroke-width="2.2"${pallino ? "" : ' stroke-dasharray="3 2.2"'}>${SEGNI[tipo].svg}</svg>`;
+  }
+
+  // ---------- scacchiera ----------
+  const tavola = document.getElementById("tavola");
+  const posti = {};  // chiave -> button. "x,y" casella intera, "x,y,s" / "x,y,d" mezza casella
+  const posU = {};   // chiave -> ascissa del centro, per il lampo
+  const divisa = (x, y) => (y === MENO_INF || y === PIU_INF) && x > MENO_INF && x < PIU_INF;
+
+  function etichetta(testo, asse) {
+    const el = document.createElement("div");
+    el.className = `etichetta ${asse}` + (testo.includes("∞") ? " inf" : "");
+    el.textContent = testo;
+    el.setAttribute("aria-hidden", "true");
+    tavola.append(el);
+  }
+  const angolo = () => tavola.append(document.createElement("div"));
+
+  function nuovoPosto(el, chiave, u, etichettaAria) {
+    el.classList.add("posto");
+    el.setAttribute("aria-label", etichettaAria);
+    el.addEventListener("click", () => tocca(chiave));
+    posti[chiave] = el;
+    posU[chiave] = u;
+  }
+
+  angolo(); ETICHETTE.forEach(t => etichetta(t, "cx")); angolo();
+  for (let r = 0; r < N; r++) {
+    const y = N - 1 - r; // y cresce verso l'alto
+    etichetta(ETICHETTE[y], "cy");
+    for (let x = 0; x < N; x++) {
+      const cella = document.createElement(divisa(x, y) ? "div" : "button");
+      cella.className = "casella";
+      if ((x + y) % 2 === 0) cella.classList.add("scura");
+      if (x === 0 || x === N - 1 || y === 0 || y === N - 1) cella.classList.add("inf");
+      const nome = `x ${ETICHETTE[x]}, y ${ETICHETTE[y]}`;
+      if (divisa(x, y)) {
+        cella.classList.add("divisa");
+        for (const [lato, parola] of [["s", "sinistra"], ["d", "destra"]]) {
+          const b = document.createElement("button");
+          b.className = "meta " + (lato === "s" ? "sx" : "dx");
+          nuovoPosto(b, `${x},${y},${lato}`, x + (lato === "s" ? 0.25 : 0.75), `${nome}, ${parola}`);
+          cella.append(b);
+        }
+      } else {
+        nuovoPosto(cella, `${x},${y}`, x + 0.5, nome);
+      }
+      tavola.append(cella);
+    }
+    etichetta(ETICHETTE[y], "cy");
+  }
+  angolo(); ETICHETTE.forEach(t => etichetta(t, "cx")); angolo();
+
+  tavola.insertAdjacentHTML("beforeend", `
+    <svg class="sopra assi" viewBox="0 0 90 90" aria-hidden="true">
+      <g fill="currentColor" stroke="currentColor">
+        <line x1="0" y1="45" x2="88.5" y2="45" stroke-width="0.32"/>
+        <line x1="45" y1="90" x2="45" y2="1.5" stroke-width="0.32"/>
+        <polygon points="90,45 87.6,44 87.6,46" stroke="none"/>
+        <polygon points="45,0 44,2.4 46,2.4" stroke="none"/>
+      </g>
+    </svg>
+    <svg class="sopra numeri" id="numeri" viewBox="0 0 90 90" aria-hidden="true"></svg>
+    <svg class="sopra grafico" id="grafico" viewBox="0 0 90 90" aria-hidden="true"></svg>`);
+  const grafico = document.getElementById("grafico");
+
+  // numeri sugli assi (visibili solo nei livelli senza scacchiera): tacche al centro di ogni
+  // casella, e una linea puntinata che separa la fascia dell'infinito dalla parte finita
+  {
+    let s = "";
+    for (const c of [10, 80]) {
+      s += `<line class="confine" x1="${c}" y1="0" x2="${c}" y2="90"/><line class="confine" x1="0" y1="${c}" x2="90" y2="${c}"/>`;
+    }
+    for (let i = 0; i < N; i++) {
+      if (i === 4) continue;
+      const p = i * 10 + 5;
+      s += `<line class="tacca" x1="${p}" y1="44" x2="${p}" y2="46"/>`;
+      s += `<text x="${p}" y="49.6" text-anchor="middle">${ETICHETTE[i]}</text>`;
+      const q = 90 - p;
+      s += `<line class="tacca" x1="44" y1="${q}" x2="46" y2="${q}"/>`;
+      s += `<text x="43" y="${q + 1.1}" text-anchor="end">${ETICHETTE[i]}</text>`;
+    }
+    s += `<text x="43" y="49.6" text-anchor="end">0</text>`;
+    document.getElementById("numeri").innerHTML = s;
+  }
+
+  // ---------- strumenti ----------
+  const strumentiEl = document.getElementById("strumenti");
+  let strumento = "pieno";
+  for (const tipo of Object.keys(SEGNI)) {
+    const b = document.createElement("button");
+    b.className = "strumento";
+    b.title = SEGNI[tipo].nome;
+    b.setAttribute("aria-label", SEGNI[tipo].nome);
+    b.setAttribute("aria-pressed", tipo === strumento);
+    b.innerHTML = disegnoSegno(tipo);
+    b.addEventListener("click", () => {
+      strumento = tipo;
+      strumentiEl.querySelectorAll(".strumento").forEach(s => s.setAttribute("aria-pressed", s === b));
+    });
+    strumentiEl.append(b);
+  }
+
+  // ---------- esercizio ----------
+  const rnd = n => Math.floor(Math.random() * n);
+  const mescola = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const finito = () => 1 + rnd(7);
+  const infinito = () => rnd(2) ? PIU_INF : MENO_INF;
+  const opposto = y => y === PIU_INF ? MENO_INF : PIU_INF;
+
+  const nx = i => `<span class="cx">${num(i)}</span>`;   // valore di x
+  const ny = i => `<span class="cy">${num(i)}</span>`;   // valore di y
+  const fDi = a => `<i>f</i>(${nx(a)})`;
+  const lim = (a, lato = "") =>
+    `<span class="lim">lim<sub><i>x</i>→${nx(a)}${lato ? `<sup>${lato === "s" ? "−" : "+"}</sup>` : ""}</sub></span><i>f</i>(<i>x</i>)`;
+
+  // Una condizione è descritta dal suo significato; testo e segni attesi si ricavano da lì.
+  //   val  f(a) = y          lim  lim x→a f = y          vert lim x→a(±) f = ±∞
+  //   oriz lim x→±∞ f = y    obl  lim x→±∞ f = ±∞
+  function completa(c) {
+    const k = `${c.a},${c.y}`;
+    switch (c.k) {
+      case "val":  return { ...c, html: `${fDi(c.a)} = ${ny(c.y)}`, attesi: [[k, "pieno"]] };
+      case "lim":  return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[k, "vuoto"]] };
+      case "vert": return { ...c, html: `${lim(c.a, c.lato === "both" ? "" : c.lato)} = ${ny(c.y)}`,
+                            attesi: (c.lato === "both" ? ["s", "d"] : [c.lato]).map(l => [`${k},${l}`, "verticale"]) };
+      case "oriz": return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[k, "orizzontale"]] };
+      case "obl":  return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`,
+                            attesi: [[k, (c.a === PIU_INF) === (c.y === PIU_INF) ? "sale" : "scende"]] };
+    }
+  }
+
+  // ---------- livelli ----------
+  // colonne: quante x finite hanno condizioni; tipi: estrazione pesata per colonna;
+  // bordi: probabilità di una condizione a x→±∞ (oriz, e anche obl se obl è vero)
+  const PER_LIVELLO = 3; // esercizi risolti per passare al livello successivo
+  const LIVELLI = [
+    { nome: "Valori della funzione",            colori: true,  colonne: 4, tipi: ["val"], bordi: 0, min: 4, max: 4 },
+    { nome: "Valori e limiti al finito",        colori: true,  colonne: 4, tipi: ["val", "val", "lim", "salto"], bordi: 0, min: 4, max: 5 },
+    { nome: "Asintoti orizzontali",             colori: true,  colonne: 3, tipi: ["val", "lim", "salto"], bordi: 0.8, min: 4, max: 6 },
+    { nome: "Asintoti verticali",               colori: true,  colonne: 3, tipi: ["val", "lim", "asintoto", "asintoto"], bordi: 0.6, min: 4, max: 6 },
+    { nome: "Limiti laterali e limiti infiniti all'infinito", colori: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6 },
+    { nome: "Tutto insieme, senza colori",      colori: false, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6 },
+    // assi: niente scacchiera, solo assi cartesiani numerati
+    { nome: "Senza scacchiera, solo assi",      colori: false, assi: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6 },
+    { nome: "Tutto insieme, solo assi",         colori: false, assi: true, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6 },
+  ];
+
+  function genera(L) {
+    let cond;
+    do {
+      cond = [];
+      let doppie = 0; // al massimo un salto o una coppia di limiti laterali
+      for (const a of mescola([1, 2, 3, 4, 5, 6, 7]).slice(0, L.colonne)) {
+        let tipo = L.tipi[rnd(L.tipi.length)];
+        if (tipo === "salto" && doppie) tipo = "lim";
+        const y = finito();
+        if (tipo === "val" || tipo === "lim") cond.push({ k: tipo, a, y });
+        else if (tipo === "salto") {
+          doppie++;
+          let c; do c = finito(); while (c === y);
+          cond.push({ k: "lim", a, y }, { k: "val", a, y: c });
+        } else if (L.laterali && !doppie && Math.random() < 0.45) {
+          doppie++;
+          const ys = infinito();
+          cond.push({ k: "vert", a, y: ys, lato: "s" }, { k: "vert", a, y: opposto(ys), lato: "d" });
+        } else {
+          cond.push({ k: "vert", a, y: infinito(), lato: "both" });
+        }
+      }
+      for (const lato of [MENO_INF, PIU_INF]) {
+        if (Math.random() >= L.bordi) continue;
+        if (!L.obl || Math.random() < 0.55) cond.push({ k: "oriz", a: lato, y: finito() });
+        else cond.push({ k: "obl", a: lato, y: infinito() });
+      }
+    } while (cond.length < L.min || cond.length > L.max);
+    return mescola(cond).map(completa);
+  }
+
+  // ---------- una funzione che rispetta le condizioni ----------
+  // Il grafico resta nella parte finita e si aggancia all'estremo interno di ogni tratteggio,
+  // con la stessa direzione: da lì in poi è il tratteggio a dire dove va la funzione.
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const pend = (p, q) => (q.v - p.v) / (q.u - p.u);
+
+  // geometria dei segni: svg con margine 8% e lato 84% della casella, viewBox di 20 unità
+  const SC = 0.84 / 20, MARG = 0.08;
+  function puntoSegno(x, y, meta, px, py) {
+    const u = meta ? x + (meta === "s" ? 0.25 : 0.75) + (px - 10) * SC : x + MARG + px * SC;
+    return { u, v: y + 1 - MARG - py * SC };
+  }
+  // estremo interno del tratteggio verticale nella metà (lato) della casella (a, Y)
+  const attaccoVerticale = (a, Y, lato) => ({ ...puntoSegno(a, Y, lato, 10, Y === PIU_INF ? 18.5 : 1.5), alto: Y === PIU_INF });
+  // estremo interno del segno a x→±∞, con la pendenza del segno
+  function attaccoBordo(lato, b) {
+    if (b.h != null) return { ...puntoSegno(lato, b.h, null, lato === MENO_INF ? 18.5 : 1.5, 10), m: 0 };
+    const alto = b.inf === PIU_INF;
+    if (lato === MENO_INF) return alto ? { ...puntoSegno(0, 8, null, 17, 17), m: -1 } : { ...puntoSegno(0, 0, null, 17, 3), m: 1 };
+    return alto ? { ...puntoSegno(8, 8, null, 3, 17), m: 1 } : { ...puntoSegno(8, 0, null, 3, 3), m: -1 };
+  }
+
+  function costruisciFunzione(cond) {
+    const ancore = {};      // a -> v per cui passa il grafico (il limite vince sul valore)
+    const vert = {};        // a -> { s: 0|8, d: 0|8 }
+    const bordo = {};       // 0|8 -> { h: y } oppure { inf: 0|8 }
+    for (const c of cond) {
+      if (c.k === "lim") ancore[c.a] = c.y + 0.5;
+      if (c.k === "val" && !cond.some(d => d.k === "lim" && d.a === c.a)) ancore[c.a] = c.y + 0.5;
+      if (c.k === "vert") {
+        vert[c.a] ??= {};
+        if (c.lato !== "d") vert[c.a].s = c.y;
+        if (c.lato !== "s") vert[c.a].d = c.y;
+      }
+      if (c.k === "oriz") bordo[c.a] = { h: c.y };
+      if (c.k === "obl") bordo[c.a] = { inf: c.y };
+    }
+    const colAsintoti = Object.keys(vert).map(Number).sort((p, q) => p - q);
+    const segmenti = [];
+
+    for (let i = 0; i <= colAsintoti.length; i++) {
+      const primo = i === 0, ultimo = i === colAsintoti.length;
+      const aPrima = primo ? null : colAsintoti[i - 1], aDopo = ultimo ? null : colAsintoti[i];
+      const VS = primo ? null : attaccoVerticale(aPrima, vert[aPrima].d, "d");
+      const VE = ultimo ? null : attaccoVerticale(aDopo, vert[aDopo].s, "s");
+      const bs = primo ? bordo[MENO_INF] : null, bd = ultimo ? bordo[PIU_INF] : null;
+      const inizio = bs ? attaccoBordo(MENO_INF, bs) : null, fine = bd ? attaccoBordo(PIU_INF, bd) : null;
+
+      const lo = VS?.u ?? inizio?.u ?? 1, hi = VE?.u ?? fine?.u ?? 8;
+      let pts = Object.entries(ancore).map(([a, v]) => ({ u: +a + 0.5, v })).filter(p => p.u > lo && p.u < hi);
+      if (inizio) pts.unshift(inizio);
+      if (fine) pts.push(fine);
+
+      // serve almeno un punto al finito, altrimenti il tratto resterebbe tutto all'infinito
+      if (!pts.some(p => p.v > 1 && p.v < 8)) {
+        const su = VS ? VS.alto : bs?.inf === PIU_INF, giu = VS ? !VS.alto : bs?.inf === MENO_INF;
+        const su2 = VE ? VE.alto : bd?.inf === PIU_INF, giu2 = VE ? !VE.alto : bd?.inf === MENO_INF;
+        const v = su && su2 ? 3.5 : giu && giu2 ? 5.5 : 4.5;
+        pts.push({ u: (lo + hi) / 2, v });
+        pts.sort((p, q) => p.u - q.u);
+      }
+      // estremi senza condizione: il grafico si ferma al bordo della fascia ±∞ (non dice nulla
+      // sul limite) continuando con la pendenza che ha, e non finisce sopra l'asse x
+      const lontanoDallAsse = v => Math.abs(v - 4.5) < 0.35 ? (v < 4.5 ? 3.9 : 5.1) : v;
+      if (primo && !bs && pts[0].u > 1) {
+        const [p, q] = pts;
+        const v0 = q ? clamp(p.v - pend(p, q) * (p.u - 1) * 0.5, 1.5, 7.5) : p.v;
+        pts.unshift({ u: 1, v: lontanoDallAsse(v0) });
+      }
+      if (ultimo && !bd && pts[pts.length - 1].u < 8) {
+        const p = pts[pts.length - 1], q = pts[pts.length - 2];
+        const v8 = q ? clamp(p.v + pend(q, p) * (8 - p.u) * 0.5, 1.5, 7.5) : p.v;
+        pts.push({ u: 8, v: lontanoDallAsse(v8) });
+      }
+      segmenti.push(campiona(pts, VS, VE));
+    }
+    return {
+      segmenti,
+      asintotiV: colAsintoti.map(a => a + 0.5),
+      asintotiH: [bordo[MENO_INF], bordo[PIU_INF]].filter(b => b?.h != null).map(b => b.h + 0.5),
+    };
+  }
+
+  // Hermite monotono (Fritsch–Butland) fra i punti; i punti con m già fissata (attacchi ai
+  // tratteggi di bordo) la tengono. Verso un tratteggio verticale: Bézier con tangente verticale.
+  function campiona(pts, VS, VE) {
+    const est = [...(VS ? [VS] : []), ...pts, ...(VE ? [VE] : [])];
+    const off = VS ? 1 : 0;
+    const m = pts.map((p, j) => {
+      if (p.m !== undefined) return p.m;
+      const prev = est[j + off - 1], next = est[j + off + 1];
+      if (prev && next) {
+        const s1 = pend(prev, p), s2 = pend(p, next);
+        if (s1 * s2 <= 0) return 0;
+        const h1 = p.u - prev.u, h2 = next.u - p.u;
+        return 3 * (h1 + h2) / ((2 * h2 + h1) / s1 + (h2 + 2 * h1) / s2);
+      }
+      return prev ? pend(prev, p) : pend(p, next);
+    });
+    const out = [];
+    const bez = (P0, P1, P2, P3, n = 48) => {
+      for (let i = 0; i <= n; i++) {
+        const t = i / n, a = (1 - t) ** 3, b = 3 * (1 - t) ** 2 * t, c = 3 * (1 - t) * t * t, d = t ** 3;
+        out.push({ u: a * P0.u + b * P1.u + c * P2.u + d * P3.u, v: a * P0.v + b * P1.v + c * P2.v + d * P3.v });
+      }
+    };
+    // K, H: quanto la curva resta al finito prima di piegare verso il tratteggio verticale
+    const K = 0.45, H = 0.9;
+    if (VS) {
+      const P = pts[0], d = P.u - VS.u, h = Math.abs(P.v - VS.v) * H;
+      bez(VS, { u: VS.u, v: VS.alto ? VS.v - h : VS.v + h }, { u: P.u - d * K, v: P.v - d * K * m[0] }, P);
+    }
+    for (let j = 0; j < pts.length - 1; j++) {
+      const p = pts[j], q = pts[j + 1], h = q.u - p.u;
+      for (let i = (j === 0 && !VS) ? 0 : 1; i <= 24; i++) {
+        const t = i / 24, t2 = t * t, t3 = t2 * t;
+        out.push({
+          u: p.u + h * t,
+          v: (2 * t3 - 3 * t2 + 1) * p.v + (t3 - 2 * t2 + t) * h * m[j] + (-2 * t3 + 3 * t2) * q.v + (t3 - t2) * h * m[j + 1],
+        });
+      }
+    }
+    if (VE) {
+      const P = pts[pts.length - 1], d = VE.u - P.u, h = Math.abs(P.v - VE.v) * H;
+      bez(P, { u: P.u + d * K, v: P.v + d * K * m[m.length - 1] }, { u: VE.u, v: VE.alto ? VE.v - h : VE.v + h }, VE);
+    }
+    return out;
+  }
+
+  // ---------- animazione del grafico ----------
+  let animazione = null;
+  const X = u => (u * 10).toFixed(2), Y = v => (90 - v * 10).toFixed(2);
+
+  function fermaGrafico() {
+    if (animazione) cancelAnimationFrame(animazione);
+    animazione = null;
+    grafico.innerHTML = "";
+    grafico.classList.remove("visibile");
+  }
+
+  function mostraGrafico() {
+    fermaGrafico();
+    const { segmenti, asintotiV, asintotiH } = costruisciFunzione(condizioni);
+    let html = "";
+    for (const u of asintotiV) html += `<line class="asintoto" x1="${X(u)}" y1="0" x2="${X(u)}" y2="90"/>`;
+    for (const v of asintotiH) html += `<line class="asintoto" x1="0" y1="${Y(v)}" x2="90" y2="${Y(v)}"/>`;
+    html += segmenti.map(() => '<path class="alone"/><path class="tratto"/>').join("");
+    grafico.innerHTML = html;
+    const aloni = grafico.querySelectorAll(".alone"), tratti = grafico.querySelectorAll(".tratto");
+    requestAnimationFrame(() => grafico.classList.add("visibile"));
+
+    const lampi = [...segni.keys()].map(k => ({ k, u: posU[k] })).sort((p, q) => p.u - q.u);
+    let prossimo = 0;
+    const disegnaFino = testa => {
+      segmenti.forEach((seg, i) => {
+        const vis = [];
+        for (let j = 0; j < seg.length; j++) {
+          const p = seg[j];
+          if (p.u <= testa) { vis.push(p); continue; }
+          const q = seg[j - 1];
+          if (q) { const t = (testa - q.u) / (p.u - q.u); vis.push({ u: testa, v: q.v + (p.v - q.v) * t }); }
+          break;
+        }
+        const d = vis.length > 1 ? "M" + vis.map(p => `${X(p.u)} ${Y(p.v)}`).join("L") : "";
+        aloni[i].setAttribute("d", d);
+        tratti[i].setAttribute("d", d);
+      });
+      while (prossimo < lampi.length && lampi[prossimo].u <= testa) {
+        const el = posti[lampi[prossimo++].k];
+        el.classList.remove("lampo");
+        void el.offsetWidth; // riavvia l'animazione
+        el.classList.add("lampo");
+      }
+    };
+
+    if (riduciMoto) { disegnaFino(9); return; }
+    let inizio = null;
+    const passo = t => {
+      inizio ??= t;
+      const trascorso = t - inizio - PAUSA_ASINTOTI;
+      if (trascorso >= 0) disegnaFino(Math.min(9, trascorso / DURATA_TRACCIA * 9));
+      if (trascorso < DURATA_TRACCIA) animazione = requestAnimationFrame(passo);
+      else animazione = null;
+    };
+    animazione = requestAnimationFrame(passo);
+  }
+
+  // ---------- stato ----------
+  let condizioni = [];
+  let segni = new Map(); // chiave -> tipo
+  let bloccato = false;
+  const elCond = document.getElementById("condizioni");
+  const elMsg = document.getElementById("messaggio");
+  const btnControlla = document.getElementById("controlla");
+  const btnSoluzione = document.getElementById("soluzione");
+  const MSG_INIZIO = "Piazza un segno per ogni condizione, poi premi Controlla.";
+
+  const SPUNTA = '<svg class="esito" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  const CROCE = '<svg class="esito" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+
+  function blocca(si) {
+    bloccato = si;
+    Object.values(posti).forEach(b => b.disabled = si);
+    btnControlla.disabled = si;
+    // a esercizio chiuso il tasto principale diventa Prossimo livello
+    btnProssimo.classList.toggle("primario", si);
+  }
+
+  // ---------- avanzamento ----------
+  const CHIAVE = "scacchiera-inf";
+  // risolti: un contatore per livello, così cambiare livello non azzera nulla
+  // modo "percorso": livelli in ordine, si sbloccano risolvendo.
+  // modo "allenamento": qualunque livello (livAll), senza toccare l'avanzamento del percorso.
+  let prog = { modo: "percorso", liv: 0, livAll: 0, massimo: 0, risolti: [] };
+  try { Object.assign(prog, JSON.parse(localStorage.getItem(CHIAVE)) || {}); } catch {}
+  prog.massimo = clamp(prog.massimo | 0, 0, LIVELLI.length - 1);
+  prog.liv = clamp(prog.liv | 0, 0, prog.massimo);
+  prog.livAll = clamp(prog.livAll | 0, 0, LIVELLI.length - 1);
+  if (prog.modo !== "allenamento") prog.modo = "percorso";
+  if (!Array.isArray(prog.risolti)) prog.risolti = [];
+  prog.risolti = LIVELLI.map((_, i) => prog.risolti[i] | 0);
+  let risoltiAllenamento = 0; // solo per questa visita
+  const salva = () => { try { localStorage.setItem(CHIAVE, JSON.stringify(prog)); } catch {} };
+  const allenamento = () => prog.modo === "allenamento";
+  const livello = () => allenamento() ? prog.livAll : prog.liv;
+  const ultimoLivello = () => prog.liv === LIVELLI.length - 1;
+  const superato = () => !allenamento() && prog.risolti[prog.liv] >= PER_LIVELLO && !ultimoLivello();
+  const btnProssimo = document.getElementById("prossimo");
+
+  const elModi = document.getElementById("modi");
+  elModi.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    if (prog.modo === b.dataset.modo) return;
+    prog.modo = b.dataset.modo; salva(); nuovo();
+  }));
+
+  const elLivelli = document.getElementById("livelli");
+  LIVELLI.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.textContent = i + 1;
+    b.setAttribute("aria-label", `Livello ${i + 1}`);
+    b.addEventListener("click", () => {
+      if (i === livello()) return;
+      if (allenamento()) prog.livAll = i; else prog.liv = i;
+      salva(); nuovo();
+    });
+    elLivelli.append(b);
+  });
+
+  function mostraLivello() {
+    const L = LIVELLI[livello()];
+    document.body.classList.toggle("colori", L.colori);
+    document.body.classList.toggle("solo-assi", !!L.assi);
+    elModi.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === prog.modo));
+    [...elLivelli.children].forEach((b, i) => {
+      const chiuso = !allenamento() && i > prog.massimo;
+      b.setAttribute("aria-pressed", i === livello());
+      b.disabled = chiuso;
+      b.title = chiuso ? "Si sblocca superando il livello precedente" : LIVELLI[i].nome;
+    });
+    document.getElementById("livello-nome").textContent = L.nome;
+    const n = prog.risolti[prog.liv];
+    document.getElementById("avanzamento").textContent =
+      allenamento() ? `Allenamento, non conta per il percorso. Esercizi risolti: ${risoltiAllenamento}`
+      : ultimoLivello() ? `Esercizi risolti: ${n}`
+      : superato() ? `Livello superato, esercizi risolti: ${n}`
+      : `Esercizi risolti: ${n} di ${PER_LIVELLO}`;
+    btnProssimo.hidden = !superato();
+  }
+
+  btnProssimo.addEventListener("click", () => {
+    prog.liv++;
+    prog.massimo = Math.max(prog.massimo, prog.liv);
+    salva();
+    nuovo();
+  });
+
+  function nuovo() {
+    fermaGrafico();
+    mostraLivello();
+    condizioni = genera(LIVELLI[livello()]);
+    segni.clear();
+    elCond.innerHTML = condizioni.map(c => `<li><span class="esito"></span><span>${c.html}</span></li>`).join("");
+    blocca(false);
+    pulisciEsito();
+    disegnaTutto();
+  }
+
+  function pulisciEsito() {
+    Object.values(posti).forEach(b => b.classList.remove("giusto", "sbagliato", "soluzione", "lampo"));
+    elCond.querySelectorAll("li").forEach(li => { li.className = ""; li.querySelector(".esito").outerHTML = '<span class="esito"></span>'; });
+    btnSoluzione.hidden = true;
+    elMsg.className = "messaggio";
+    elMsg.textContent = MSG_INIZIO;
+  }
+
+  function disegnaTutto() {
+    for (const [k, b] of Object.entries(posti)) {
+      const tipo = segni.get(k);
+      b.innerHTML = tipo ? disegnoSegno(tipo, b.classList.contains("meta")) : "";
+    }
+  }
+
+  function tocca(k) {
+    if (bloccato) return;
+    if (segni.get(k) === strumento) segni.delete(k);
+    else segni.set(k, strumento);
+    pulisciEsito();
+    disegnaTutto();
+  }
+
+  const attesiTutti = () => new Map(condizioni.flatMap(c => c.attesi));
+
+  function controlla() {
+    const attesi = attesiTutti();
+    let giuste = 0;
+    elCond.querySelectorAll("li").forEach((li, i) => {
+      const ok = condizioni[i].attesi.every(([k, tipo]) => segni.get(k) === tipo);
+      if (ok) giuste++;
+      li.className = ok ? "giusto" : "sbagliato";
+      li.querySelector(".esito").outerHTML = ok ? SPUNTA : CROCE;
+    });
+    let inPiu = 0;
+    for (const [k, tipo] of segni) {
+      if (!attesi.has(k)) inPiu++;
+      posti[k].classList.add(attesi.get(k) === tipo ? "giusto" : "sbagliato");
+    }
+    const tot = condizioni.length;
+    if (giuste === tot && inPiu === 0) {
+      let appenaSuperato = false;
+      if (allenamento()) risoltiAllenamento++;
+      else {
+        prog.risolti[prog.liv]++;
+        appenaSuperato = prog.risolti[prog.liv] === PER_LIVELLO && !ultimoLivello();
+        if (appenaSuperato) prog.massimo = Math.max(prog.massimo, prog.liv + 1);
+        salva();
+      }
+      mostraLivello();
+      elMsg.className = "messaggio risolto";
+      elMsg.textContent = appenaSuperato ? `Esercizio risolto. Livello ${prog.liv + 1} superato.` : "Esercizio risolto";
+      blocca(true);
+      mostraGrafico();
+      return;
+    }
+    let t = giuste === 0 ? `Nessuna delle ${tot} condizioni è a posto`
+      : giuste === 1 ? `1 condizione su ${tot} è a posto` : `${giuste} condizioni su ${tot} sono a posto`;
+    if (inPiu) t += inPiu === 1 ? ", 1 segno non corrisponde a nessuna condizione" : `, ${inPiu} segni non corrispondono a nessuna condizione`;
+    elMsg.className = "messaggio";
+    elMsg.textContent = t + ". Correggi e controlla di nuovo.";
+    btnSoluzione.hidden = false;
+  }
+
+  function mostraSoluzione() {
+    const prima = new Map(segni);
+    segni = attesiTutti();
+    disegnaTutto();
+    Object.values(posti).forEach(b => b.classList.remove("giusto", "sbagliato"));
+    for (const [k, tipo] of segni) posti[k].classList.add(prima.get(k) === tipo ? "giusto" : "soluzione");
+    blocca(true);
+    btnSoluzione.hidden = true;
+    elMsg.className = "messaggio";
+    elMsg.textContent = "In arancione i segni che mancavano o erano sbagliati. Questo esercizio non conta per il livello.";
+    mostraGrafico();
+  }
+
+  btnControlla.addEventListener("click", controlla);
+  btnSoluzione.addEventListener("click", mostraSoluzione);
+  document.getElementById("nuovo").addEventListener("click", nuovo);
+  nuovo();
+</script>
+</body>
+</html>
