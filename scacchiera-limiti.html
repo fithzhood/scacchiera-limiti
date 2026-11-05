@@ -147,7 +147,23 @@
   body.solo-assi .tavola .casella.divisa::after { background: rgba(31, 42, 51, 0.16); }
   body.solo-assi .tavola .posto:hover { background: rgba(31, 42, 51, 0.06); }
   body.solo-assi .etichetta { visibility: hidden; }
-  body:not(.solo-assi) .numeri { display: none; }
+  body:not(.solo-assi) .numeri,
+  body:not(.solo-assi) .infiniti { display: none; }
+  .infiniti {
+    position: absolute;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .infiniti text {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 4.4px;
+    fill: var(--inchiostro);
+  }
   /* i numeri stanno sopra i segni, con un alone, per restare leggibili */
   .tavola .numeri { z-index: 4; }
   .numeri text {
@@ -437,7 +453,8 @@
     for (const c of [10, 80]) {
       s += `<line class="confine" x1="${c}" y1="0" x2="${c}" y2="90"/><line class="confine" x1="0" y1="${c}" x2="90" y2="${c}"/>`;
     }
-    for (let i = 0; i < N; i++) {
+    // sugli assi solo i valori finiti: gli infiniti sono direzioni, stanno fuori dal piano
+    for (let i = 1; i < N - 1; i++) {
       if (i === 4) continue;
       const p = i * 10 + 5;
       s += `<line class="tacca" x1="${p}" y1="44" x2="${p}" y2="46"/>`;
@@ -449,6 +466,15 @@
     s += `<text x="43" y="49.6" text-anchor="end">0</text>`;
     document.getElementById("numeri").innerHTML = s;
   }
+  // ±∞ oltre le estremità degli assi, nel margine attorno al piano (tavola intera = 104 unità,
+  // piano da 7 a 97, assi a 52)
+  tavola.insertAdjacentHTML("beforeend", `
+    <svg class="infiniti" viewBox="0 0 104 104" aria-hidden="true">
+      <text x="101" y="53.4" text-anchor="middle">+∞</text>
+      <text x="3"   y="53.4" text-anchor="middle">−∞</text>
+      <text x="52"  y="4.6"  text-anchor="middle">+∞</text>
+      <text x="52"  y="102.6" text-anchor="middle">−∞</text>
+    </svg>`);
 
   // ---------- strumenti ----------
   const strumentiEl = document.getElementById("strumenti");

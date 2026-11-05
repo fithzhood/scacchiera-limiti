@@ -28,7 +28,8 @@ Assi sottili, così i tratteggi che cadono sugli assi si vedono. Senza condizion
 1 Valori · 2 Valori e limiti al finito · 3 Asintoti orizzontali · 4 Asintoti verticali ·
 5 Limiti laterali e limiti infiniti all'infinito · 6 tutto, senza colori ·
 7 senza scacchiera, solo assi · 8 tutto, solo assi.
-Livelli 7-8: foglio uniforme, numeri e tacche sugli assi (sopra i segni, con alone), una linea
+Livelli 7-8: foglio uniforme, numeri e tacche sugli assi solo da −3 a +3 (sopra i segni, con alone);
+±∞ fuori dal piano, oltre le estremità degli assi, perché indicano una direzione e non un punto; una linea
 puntinata separa la fascia ±∞ dalla parte finita. Il tasto Prossimo livello compare a livello superato.
 Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
 L'avanzamento resta nel browser (localStorage).
