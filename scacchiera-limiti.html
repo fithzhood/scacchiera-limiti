@@ -99,20 +99,32 @@
     background: rgba(31, 42, 51, 0.38);
     pointer-events: none;
   }
+  /* caselle a x = ±∞ con y finito: divise dalla retta y = b */
+  .casella.divisa-o::after {
+    content: "";
+    position: absolute;
+    top: calc(50% - 0.5px);
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(31, 42, 51, 0.38);
+    pointer-events: none;
+  }
   .posto { cursor: pointer; color: var(--inchiostro-tavola); }
   .posto:disabled { cursor: default; }
   .posto:focus-visible { outline: 3px solid var(--evidenziatore); outline-offset: -3px; z-index: 4; }
   .meta {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 50%;
     border: 0;
     padding: 0;
     background: transparent;
   }
+  .meta.sx, .meta.dx { top: 0; bottom: 0; width: 50%; }
   .meta.sx { left: 0; }
   .meta.dx { left: 50%; }
+  .meta.su, .meta.giu { left: 0; right: 0; height: 50%; }
+  .meta.su { top: 0; }
+  .meta.giu { top: 50%; }
   .posto svg {
     position: absolute;
     inset: 8%;
@@ -120,7 +132,8 @@
     height: 84%;
     z-index: 3; /* sopra assi e grafico */
   }
-  .meta svg { inset: 8% 0; width: 100%; }
+  .meta.sx svg, .meta.dx svg { inset: 8% 0; width: 100%; }
+  .meta.su svg, .meta.giu svg { inset: 0 8%; width: 84%; height: 100%; }
   .posto.giusto { color: var(--giusto); }
   .posto.sbagliato { color: var(--sbagliato); }
   .posto.soluzione { color: var(--soluzione); }
@@ -144,7 +157,8 @@
   body.solo-assi .tavola {
     background: linear-gradient(var(--carta-inf), var(--carta-inf)) 50% 50% / 86.54% 86.54% no-repeat;
   }
-  body.solo-assi .tavola .casella.divisa::after { background: rgba(31, 42, 51, 0.16); }
+  body.solo-assi .tavola .casella.divisa::after,
+  body.solo-assi .tavola .casella.divisa-o::after { background: rgba(31, 42, 51, 0.16); }
   body.solo-assi .tavola .posto:hover { background: rgba(31, 42, 51, 0.06); }
   body.solo-assi .etichetta { visibility: hidden; }
   body:not(.solo-assi) .numeri,
@@ -377,17 +391,25 @@
     sale:        { nome: "Tratteggio in salita",   svg: '<line x1="3" y1="17" x2="17" y2="3"/>' },
     scende:      { nome: "Tratteggio in discesa",  svg: '<line x1="3" y1="3" x2="17" y2="17"/>' },
   };
-  function disegnoSegno(tipo, meta = false) {
+  // taglio: "v" mezza casella sinistra/destra, "o" mezza casella sopra/sotto, "" casella intera
+  function disegnoSegno(tipo, taglio = "") {
     const pallino = tipo === "pieno" || tipo === "vuoto";
-    const box = meta ? "5 0 10 20" : "0 0 20 20";
+    const box = taglio === "v" ? "5 0 10 20" : taglio === "o" ? "0 5 20 10" : "0 0 20 20";
     return `<svg viewBox="${box}" aria-hidden="true" stroke="currentColor" stroke-width="2.2"${pallino ? "" : ' stroke-dasharray="3 2.2"'}>${SEGNI[tipo].svg}</svg>`;
   }
 
   // ---------- scacchiera ----------
   const tavola = document.getElementById("tavola");
-  const posti = {};  // chiave -> button. "x,y" casella intera, "x,y,s" / "x,y,d" mezza casella
+  // chiave -> button: "x,y" casella intera, "x,y,s|d" metà sinistra/destra, "x,y,su|giu" metà sopra/sotto
+  const posti = {};
   const posU = {};   // chiave -> ascissa del centro, per il lampo
-  const divisa = (x, y) => (y === MENO_INF || y === PIU_INF) && x > MENO_INF && x < PIU_INF;
+  const alFinito = i => i > MENO_INF && i < PIU_INF;
+  // y = ±∞ e x finito: divisa dalla retta x = a; x = ±∞ e y finito: divisa dalla retta y = b
+  const taglioDi = (x, y) => !alFinito(y) && alFinito(x) ? "v" : !alFinito(x) && alFinito(y) ? "o" : "";
+  const META = {
+    v: [["s", "sinistra", "sx", 0.25], ["d", "destra", "dx", 0.75]],
+    o: [["su", "sopra", "su", 0.5], ["giu", "sotto", "giu", 0.5]],
+  };
 
   function etichetta(testo, asse) {
     const el = document.createElement("div");
@@ -411,17 +433,19 @@
     const y = N - 1 - r; // y cresce verso l'alto
     etichetta(ETICHETTE[y], "cy");
     for (let x = 0; x < N; x++) {
-      const cella = document.createElement(divisa(x, y) ? "div" : "button");
+      const taglio = taglioDi(x, y);
+      const cella = document.createElement(taglio ? "div" : "button");
       cella.className = "casella";
       if ((x + y) % 2 === 0) cella.classList.add("scura");
       if (x === 0 || x === N - 1 || y === 0 || y === N - 1) cella.classList.add("inf");
       const nome = `x ${ETICHETTE[x]}, y ${ETICHETTE[y]}`;
-      if (divisa(x, y)) {
-        cella.classList.add("divisa");
-        for (const [lato, parola] of [["s", "sinistra"], ["d", "destra"]]) {
+      if (taglio) {
+        cella.classList.add(taglio === "v" ? "divisa" : "divisa-o");
+        for (const [lato, parola, classe, du] of META[taglio]) {
           const b = document.createElement("button");
-          b.className = "meta " + (lato === "s" ? "sx" : "dx");
-          nuovoPosto(b, `${x},${y},${lato}`, x + (lato === "s" ? 0.25 : 0.75), `${nome}, ${parola}`);
+          b.className = "meta " + classe;
+          b.dataset.taglio = taglio;
+          nuovoPosto(b, `${x},${y},${lato}`, x + du, `${nome}, ${parola}`);
           cella.append(b);
         }
       } else {
@@ -516,7 +540,8 @@
       case "lim":  return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[k, "vuoto"]] };
       case "vert": return { ...c, html: `${lim(c.a, c.lato === "both" ? "" : c.lato)} = ${ny(c.y)}`,
                             attesi: (c.lato === "both" ? ["s", "d"] : [c.lato]).map(l => [`${k},${l}`, "verticale"]) };
-      case "oriz": return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[k, "orizzontale"]] };
+      // asintoto orizzontale: tratteggio sopra e sotto la retta y = b (la funzione ne userà uno)
+      case "oriz": return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: ["su", "giu"].map(l => [`${k},${l}`, "orizzontale"]) };
       case "obl":  return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`,
                             attesi: [[k, (c.a === PIU_INF) === (c.y === PIU_INF) ? "sale" : "scende"]] };
     }
@@ -585,7 +610,8 @@
   const attaccoVerticale = (a, Y, lato) => ({ ...puntoSegno(a, Y, lato, 10, Y === PIU_INF ? 18.5 : 1.5), alto: Y === PIU_INF });
   // estremo interno del segno a x→±∞, con la pendenza del segno
   function attaccoBordo(lato, b) {
-    if (b.h != null) return { ...puntoSegno(lato, b.h, null, lato === MENO_INF ? 18.5 : 1.5, 10), m: 0 };
+    // asintoto orizzontale: la metà (sopra o sotto) si sceglie dopo, guardando da dove arriva la curva
+    if (b.h != null) return { ...puntoSegno(lato, b.h, null, lato === MENO_INF ? 18.5 : 1.5, 10), m: 0, oriz: b.h };
     const alto = b.inf === PIU_INF;
     if (lato === MENO_INF) return alto ? { ...puntoSegno(0, 8, null, 17, 17), m: -1 } : { ...puntoSegno(0, 0, null, 17, 3), m: 1 };
     return alto ? { ...puntoSegno(8, 8, null, 3, 17), m: 1 } : { ...puntoSegno(8, 0, null, 3, 3), m: -1 };
@@ -630,6 +656,16 @@
         pts.push({ u: (lo + hi) / 2, v });
         pts.sort((p, q) => p.u - q.u);
       }
+      // asintoto orizzontale: la curva si aggancia al tratteggio della metà da cui arriva
+      // (sopra se il punto vicino è più alto, sotto se più basso, a caso se è alla stessa quota)
+      const scegliMeta = (att, vicino) => {
+        if (att?.oriz == null) return;
+        const c = att.oriz + 0.5;
+        const sopra = vicino && Math.abs(vicino.v - c) > 1e-9 ? vicino.v > c : Math.random() < 0.5;
+        att.v = att.oriz + (sopra ? 0.75 : 0.25);
+      };
+      scegliMeta(inizio, pts[1]);
+      scegliMeta(fine, pts[pts.length - 2]);
       // estremi senza condizione: il grafico si ferma al bordo della fascia ±∞ (non dice nulla
       // sul limite) continuando con la pendenza che ha, e non finisce sopra l'asse x
       const lontanoDallAsse = v => Math.abs(v - 4.5) < 0.35 ? (v < 4.5 ? 3.9 : 5.1) : v;
@@ -867,7 +903,7 @@
   function disegnaTutto() {
     for (const [k, b] of Object.entries(posti)) {
       const tipo = segni.get(k);
-      b.innerHTML = tipo ? disegnoSegno(tipo, b.classList.contains("meta")) : "";
+      b.innerHTML = tipo ? disegnoSegno(tipo, b.dataset.taglio || "") : "";
     }
   }
 

@@ -12,7 +12,9 @@ Ogni condizione si traduce in un segno su una casella:
 - lim x→a f(x) = ±∞ → tratteggio verticale in entrambe le metà della casella (a, ±∞)
 - lim x→a⁻ / x→a⁺ f(x) = ±∞ → tratteggio verticale nella metà sinistra / destra di (a, ±∞).
   Le caselle a ±∞ con x finito sono divise da una linea sottile: è la retta x = a.
-- lim x→±∞ f(x) = b → tratteggio orizzontale in (±∞, b)
+- lim x→±∞ f(x) = b → tratteggio orizzontale in entrambe le metà (sopra e sotto) della casella (±∞, b).
+  Le caselle a x = ±∞ con y finito sono divise da una linea sottile: è la retta y = b.
+  Il grafico si aggancia a una sola metà: quella dal lato da cui arriva la curva.
 - lim x→+∞ f(x) = +∞ e lim x→−∞ f(x) = −∞ → tratteggio in salita nell'angolo
 - lim x→+∞ f(x) = −∞ e lim x→−∞ f(x) = +∞ → tratteggio in discesa nell'angolo
 Esercizio: 4-6 condizioni coerenti con una funzione. Al massimo un salto (limite ≠ valore)
