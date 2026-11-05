@@ -34,6 +34,12 @@ Assi sottili, così i tratteggi che cadono sugli assi si vedono. Senza condizion
 Livelli 7-8: foglio uniforme, numeri e tacche sugli assi solo da −3 a +3 (sopra i segni, con alone);
 ±∞ fuori dal piano, oltre le estremità degli assi, perché indicano una direzione e non un punto; una linea
 puntinata separa la fascia ±∞ dalla parte finita. Il tasto Prossimo livello compare a livello superato.
+Ogni esercizio usa la meccanica che il suo livello introduce: 2 un salto (limite e valore diversi
+nella stessa colonna), 3 un asintoto orizzontale, 4 un asintoto verticale, 5 una coppia di limiti
+laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e una condizione a x→±∞.
+Spiegazione di inizio livello: nel Percorso compare la prima volta che si arriva a un livello
+(caselle d'esempio con il segno, la condizione, due righe di testo); si riapre con "Spiegazione
+del livello", anche in Allenamento. I livelli spiegati si ricordano.
 Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
 L'avanzamento resta nel browser (localStorage).
 Due modalità: Percorso (livelli in ordine, si sbloccano) e Allenamento (qualunque livello, conta

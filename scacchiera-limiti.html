@@ -332,6 +332,52 @@
   .azioni button:disabled { opacity: 0.35; cursor: default; }
   .messaggio { margin: 0; min-height: 1.4em; font-size: 15px; line-height: 1.4; }
   .messaggio.risolto { color: var(--giusto); font-weight: 600; }
+  .collegamento {
+    font: inherit;
+    font-size: 13px;
+    min-height: 36px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--inchiostro);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .collegamento:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
+
+  /* ---------- spiegazione di inizio livello ---------- */
+  .spiegazione {
+    width: min(100vw - 32px, 520px);
+    max-height: calc(100vh - 32px);
+    border: 0;
+    border-radius: 8px;
+    padding: 20px 20px 16px;
+    background: var(--fondo);
+    color: var(--inchiostro);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  }
+  .spiegazione::backdrop { background: rgba(21, 27, 33, 0.5); }
+  .spiegazione .sp-numero { margin: 0; font-size: 13px; color: var(--etichetta); }
+  .spiegazione .sp-titolo { margin: 2px 0 6px; font-size: 18px; font-weight: 600; color: var(--inchiostro); }
+  .voce {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 16px;
+    align-items: start;
+    padding: 14px 0;
+    border-top: 1px solid rgba(127, 140, 150, 0.35);
+  }
+  .voce.solo-testo { grid-template-columns: 1fr; }
+  .voce .figure { display: flex; gap: 8px; }
+  .voce .formula { font-family: var(--formula); font-size: 19px; line-height: 1.5; align-self: center; }
+  .voce p { margin: 0; font-size: 14px; line-height: 1.5; grid-column: 1 / -1; }
+  .esempio { display: grid; justify-items: center; gap: 4px; font-size: 12px; color: var(--etichetta); }
+  .mini { width: 52px; height: 52px; display: block; }
+  .mini svg { position: absolute; inset: 8%; width: 84%; height: 84%; }
+  .piano-mini { width: 140px; height: 140px; display: block; }
+  .piano-mini text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; fill: var(--inchiostro); }
+  .spiegazione .azioni { justify-content: flex-end; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -347,6 +393,7 @@
       <h2 id="titolo-livelli">Livello</h2>
       <div class="livelli" id="livelli" role="group" aria-labelledby="titolo-livelli"></div>
       <p class="livello-info"><span id="livello-nome"></span><br><span class="avanzamento" id="avanzamento"></span></p>
+      <button class="collegamento" id="spiega">Spiegazione del livello</button>
     </div>
     <div>
       <h2>Condizioni</h2>
@@ -365,6 +412,12 @@
     <p class="messaggio" id="messaggio" aria-live="polite"></p>
   </section>
 </main>
+<dialog class="spiegazione" id="spiegazione" aria-labelledby="sp-titolo">
+  <p class="sp-numero" id="sp-numero"></p>
+  <h2 class="sp-titolo" id="sp-titolo"></h2>
+  <div id="sp-voci"></div>
+  <form method="dialog" class="azioni"><button class="primario" id="sp-chiudi">Inizia</button></form>
+</dialog>
 <script>
   // Indici 0..8 sulla scacchiera: 0 = −∞, 1..7 = −3..+3, 8 = +∞.
   // Coordinate del grafico (u, v) in unità di casella: u = 0..9 da sinistra, v = 0..9 dal basso.
@@ -553,15 +606,24 @@
   const PER_LIVELLO = 3; // esercizi risolti per passare al livello successivo
   const LIVELLI = [
     { nome: "Valori della funzione",            colori: true,  colonne: 4, tipi: ["val"], bordi: 0, min: 4, max: 4 },
-    { nome: "Valori e limiti al finito",        colori: true,  colonne: 4, tipi: ["val", "val", "lim", "salto"], bordi: 0, min: 4, max: 5 },
-    { nome: "Asintoti orizzontali",             colori: true,  colonne: 3, tipi: ["val", "lim", "salto"], bordi: 0.8, min: 4, max: 6 },
-    { nome: "Asintoti verticali",               colori: true,  colonne: 3, tipi: ["val", "lim", "asintoto", "asintoto"], bordi: 0.6, min: 4, max: 6 },
-    { nome: "Limiti laterali e limiti infiniti all'infinito", colori: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6 },
-    { nome: "Tutto insieme, senza colori",      colori: false, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6 },
+    { nome: "Valori e limiti al finito",        colori: true,  colonne: 4, tipi: ["val", "val", "lim", "salto"], bordi: 0, min: 4, max: 5, richiede: ["salto"] },
+    { nome: "Asintoti orizzontali",             colori: true,  colonne: 3, tipi: ["val", "lim", "salto"], bordi: 0.8, min: 4, max: 6, richiede: ["oriz"] },
+    { nome: "Asintoti verticali",               colori: true,  colonne: 3, tipi: ["val", "lim", "asintoto", "asintoto"], bordi: 0.6, min: 4, max: 6, richiede: ["vert"] },
+    { nome: "Limiti laterali e limiti infiniti all'infinito", colori: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6, richiede: ["laterali", "obl"] },
+    { nome: "Tutto insieme, senza colori",      colori: false, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6, richiede: ["vert", "bordo"] },
     // assi: niente scacchiera, solo assi cartesiani numerati
-    { nome: "Senza scacchiera, solo assi",      colori: false, assi: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6 },
-    { nome: "Tutto insieme, solo assi",         colori: false, assi: true, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6 },
+    { nome: "Senza scacchiera, solo assi",      colori: false, assi: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6, richiede: ["vert", "bordo"] },
+    { nome: "Tutto insieme, solo assi",         colori: false, assi: true, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6, richiede: ["vert", "bordo"] },
   ];
+  // la meccanica che un livello introduce compare in ogni suo esercizio
+  const HA = {
+    salto:    c => c.some(d => d.k === "lim" && c.some(e => e.k === "val" && e.a === d.a)),
+    oriz:     c => c.some(d => d.k === "oriz"),
+    vert:     c => c.some(d => d.k === "vert"),
+    laterali: c => c.some(d => d.k === "vert" && d.lato !== "both"),
+    obl:      c => c.some(d => d.k === "obl"),
+    bordo:    c => c.some(d => d.k === "oriz" || d.k === "obl"),
+  };
 
   function genera(L) {
     let cond;
@@ -590,7 +652,7 @@
         if (!L.obl || Math.random() < 0.55) cond.push({ k: "oriz", a: lato, y: finito() });
         else cond.push({ k: "obl", a: lato, y: infinito() });
       }
-    } while (cond.length < L.min || cond.length > L.max);
+    } while (cond.length < L.min || cond.length > L.max || !(L.richiede ?? []).every(r => HA[r](cond)));
     return mescola(cond).map(completa);
   }
 
@@ -829,6 +891,8 @@
   if (prog.modo !== "allenamento") prog.modo = "percorso";
   if (!Array.isArray(prog.risolti)) prog.risolti = [];
   prog.risolti = LIVELLI.map((_, i) => prog.risolti[i] | 0);
+  // livelli di cui si è già vista la spiegazione
+  prog.spiegati = Array.isArray(prog.spiegati) ? prog.spiegati.filter(Number.isInteger) : [];
   let risoltiAllenamento = 0; // solo per questa visita
   const salva = () => { try { localStorage.setItem(CHIAVE, JSON.stringify(prog)); } catch {} };
   const allenamento = () => prog.modo === "allenamento";
@@ -893,7 +957,97 @@
     blocca(false);
     pulisciEsito();
     disegnaTutto();
+    // nel percorso la spiegazione compare la prima volta che si arriva a un livello
+    if (!allenamento() && !prog.spiegati.includes(prog.liv)) apriSpiegazione(true);
   }
+
+  // ---------- spiegazione di inizio livello ----------
+  // una casella d'esempio con il segno; meta: le metà da riempire (tutte se manca)
+  function esempio(tipo, x, y, meta) {
+    const t = taglioDi(x, y);
+    const classi = "casella mini" + (alFinito(x) && alFinito(y) ? "" : " inf") + (t === "v" ? " divisa" : t === "o" ? " divisa-o" : "");
+    const dentro = !t ? disegnoSegno(tipo) : META[t].map(([lato, , classe]) =>
+      `<span class="meta ${classe}">${!meta || meta.includes(lato) ? disegnoSegno(tipo, t) : ""}</span>`).join("");
+    return `<span class="esempio"><span class="${classi}">${dentro}</span><span>(${nx(x)},&nbsp;${ny(y)})</span></span>`;
+  }
+  // il piano senza scacchiera, con lim x→−2 f(x) = +∞ nella fascia in alto
+  const PIANO_MINI = `<svg class="piano-mini" viewBox="0 0 100 100" aria-hidden="true">
+      <rect x="14" y="14" width="72" height="72" style="fill: var(--carta-inf)"/>
+      <path d="M22 14V86M78 14V86M14 22H86M14 78H86" style="stroke: var(--inchiostro-tavola); stroke-width: 0.5; stroke-dasharray: 1 2; opacity: 0.55"/>
+      <line x1="34" y1="14" x2="34" y2="22" style="stroke: var(--inchiostro-tavola); stroke-width: 0.4; opacity: 0.4"/>
+      <g style="stroke: var(--inchiostro-tavola); fill: var(--inchiostro-tavola)">
+        <line x1="14" y1="50" x2="84" y2="50" stroke-width="0.8"/>
+        <line x1="50" y1="86" x2="50" y2="16" stroke-width="0.8"/>
+        <polygon points="86,50 82.5,48.4 82.5,51.6" stroke="none"/>
+        <polygon points="50,14 48.4,17.5 51.6,17.5" stroke="none"/>
+        <line x1="34" y1="48" x2="34" y2="52" stroke-width="0.8"/>
+        <path d="M32 15V21M36 15V21" stroke-width="1.6" stroke-dasharray="1.6 1.1"/>
+      </g>
+      <text x="34" y="59" font-size="7.5" text-anchor="middle" style="fill: var(--inchiostro-tavola)">−2</text>
+      <text x="94" y="53.2" font-size="9" text-anchor="middle">+∞</text>
+      <text x="6" y="53.2" font-size="9" text-anchor="middle">−∞</text>
+      <text x="50" y="10" font-size="9" text-anchor="middle">+∞</text>
+      <text x="50" y="98" font-size="9" text-anchor="middle">−∞</text>
+    </svg>`;
+  const SPIEGAZIONI = [
+    [
+      { fig: [esempio("pieno", 6, 3)], formula: `${fDi(6)} = ${ny(3)}`,
+        testo: `Il grafico passa per il punto (${nx(6)}, ${ny(3)}). Scegli il pallino pieno e tocca la casella nella colonna ${nx(6)} e nella riga ${ny(3)}.` },
+      { testo: `I numeri in blu sono valori di <i>x</i> e indicano la colonna; quelli in rosso sono valori di <i>y</i> e indicano la riga.` },
+      { testo: `Piazza un segno per ogni condizione e premi Controlla. Per togliere un segno, toccalo di nuovo con lo stesso strumento.` },
+    ],
+    [
+      { fig: [esempio("vuoto", 5, 6)], formula: `${lim(5)} = ${ny(6)}`,
+        testo: `Il limite dice a quale punto si avvicina il grafico quando <i>x</i> si avvicina a ${nx(5)}, non quanto vale <i>f</i>(${nx(5)}). Si segna con il pallino vuoto.` },
+      { fig: [esempio("vuoto", 2, 5), esempio("pieno", 2, 3)], formula: `${lim(2)} = ${ny(5)}<br>${fDi(2)} = ${ny(3)}`,
+        testo: `Limite e valore diversi nella stessa colonna: servono due segni. Il grafico arriva al pallino vuoto e salta sul pallino pieno. In ogni esercizio di questo livello c'è un salto così.` },
+    ],
+    [
+      { fig: [esempio("orizzontale", 8, 5)], formula: `${lim(PIU_INF)} = ${ny(5)}`,
+        testo: `Asintoto orizzontale. La casella nella colonna ${nx(8)} e nella riga ${ny(5)} è divisa dalla retta <i>y</i> = ${ny(5)}: metti il tratteggio orizzontale sopra e sotto la linea. Il grafico userà quello dalla parte da cui arriva.` },
+      { testo: `Con <i>x</i> → ${nx(0)} si usa la colonna di sinistra. In ogni esercizio di questo livello c'è almeno un asintoto orizzontale.` },
+    ],
+    [
+      { fig: [esempio("verticale", 2, 8)], formula: `${lim(2)} = ${ny(8)}`,
+        testo: `Asintoto verticale. La casella nella colonna ${nx(2)} e nella riga ${ny(8)} è divisa dalla retta <i>x</i> = ${nx(2)}: metti il tratteggio verticale in tutte e due le metà, perché il grafico sale da entrambi i lati.` },
+      { testo: `Se il limite è ${ny(0)} si usa la riga in basso. In ogni esercizio di questo livello c'è almeno un asintoto verticale.` },
+    ],
+    [
+      { fig: [esempio("verticale", 5, 8, ["s"]), esempio("verticale", 5, 0, ["d"])],
+        formula: `${lim(5, "s")} = ${ny(8)}<br>${lim(5, "d")} = ${ny(0)}`,
+        testo: `Il meno in alto vuol dire da sinistra, il più da destra. Il tratteggio va solo nella metà della casella da quella parte della retta <i>x</i> = ${nx(5)}.` },
+      { fig: [esempio("scende", 0, 8), esempio("sale", 8, 8)],
+        formula: `${lim(0)} = ${ny(8)}<br>${lim(8)} = ${ny(8)}`,
+        testo: `Limiti infiniti all'infinito: il segno va nell'angolo. Leggi il grafico da sinistra a destra: tratteggio in discesa se la funzione scende, in salita se sale.` },
+      { testo: `In ogni esercizio di questo livello ci sono una coppia di limiti laterali e un limite infinito all'infinito.` },
+    ],
+    [
+      { fig: [esempio("verticale", 6, 0)], formula: `${lim(6)} = ${ny(0)}`,
+        testo: `Da qui i numeri hanno tutti lo stesso colore. Il numero sotto lim o dentro <i>f</i>( ) è la <i>x</i> e dà la colonna; quello dopo l'uguale è la <i>y</i> e dà la riga.` },
+      { testo: `Ogni esercizio può contenere tutti i segni visti finora, con almeno un asintoto verticale e almeno una condizione con <i>x</i> → ±∞.` },
+    ],
+    [
+      { fig: [PIANO_MINI], formula: `${lim(2)} = ${ny(8)}`,
+        testo: `La scacchiera sparisce: restano gli assi con i numeri da −3 a +3. Ogni segno va dove andrebbe sulla scacchiera, all'incrocio fra la <i>x</i> e la <i>y</i>.` },
+      { testo: `−∞ e +∞ non sono punti degli assi: stanno oltre la loro fine e indicano una direzione. Le condizioni con ∞ vanno nella fascia lungo il bordo, oltre la linea puntinata.` },
+    ],
+    [
+      { testo: `Come il livello 7, ma con esercizi più lunghi: cinque o sei condizioni, sempre con almeno un asintoto verticale e una condizione con <i>x</i> → ±∞.` },
+    ],
+  ];
+  const dlg = document.getElementById("spiegazione");
+  function apriSpiegazione(prima) {
+    const i = livello();
+    document.getElementById("sp-numero").textContent = `Livello ${i + 1}`;
+    document.getElementById("sp-titolo").textContent = LIVELLI[i].nome;
+    document.getElementById("sp-voci").innerHTML = SPIEGAZIONI[i].map(v => v.fig || v.formula
+      ? `<div class="voce"><div class="figure">${(v.fig || []).join("")}</div>${v.formula ? `<div class="formula">${v.formula}</div>` : ""}<p>${v.testo}</p></div>`
+      : `<div class="voce solo-testo"><p>${v.testo}</p></div>`).join("");
+    document.getElementById("sp-chiudi").textContent = prima ? "Inizia" : "Torna all'esercizio";
+    if (!prog.spiegati.includes(i)) { prog.spiegati.push(i); salva(); }
+    if (!dlg.open) dlg.showModal();
+  }
+  document.getElementById("spiega").addEventListener("click", () => apriSpiegazione(false));
 
   function pulisciEsito() {
     Object.values(posti).forEach(b => b.classList.remove("giusto", "sbagliato", "soluzione", "lampo"));
