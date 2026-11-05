@@ -656,16 +656,19 @@
         pts.push({ u: (lo + hi) / 2, v });
         pts.sort((p, q) => p.u - q.u);
       }
-      // asintoto orizzontale: la curva si aggancia al tratteggio della metà da cui arriva
-      // (sopra se il punto vicino è più alto, sotto se più basso, a caso se è alla stessa quota)
-      const scegliMeta = (att, vicino) => {
+      // asintoto orizzontale: tratteggio di sopra se la funzione arriva (o prosegue) dall'alto,
+      // cioè se il primo punto a quota diversa, andando verso l'interno, è più in alto; altrimenti
+      // quello di sotto (anche quando tutti i punti sono alla stessa quota)
+      const scegliMeta = (att, verso) => {
         if (att?.oriz == null) return;
         const c = att.oriz + 0.5;
-        const sopra = vicino && Math.abs(vicino.v - c) > 1e-9 ? vicino.v > c : Math.random() < 0.5;
+        const ordine = verso > 0 ? pts : [...pts].reverse();
+        const diverso = ordine.find(p => p !== att && Math.abs(p.v - c) > 1e-9);
+        const sopra = !!diverso && diverso.v > c;
         att.v = att.oriz + (sopra ? 0.75 : 0.25);
       };
-      scegliMeta(inizio, pts[1]);
-      scegliMeta(fine, pts[pts.length - 2]);
+      scegliMeta(inizio, +1);
+      scegliMeta(fine, -1);
       // estremi senza condizione: il grafico si ferma al bordo della fascia ±∞ (non dice nulla
       // sul limite) continuando con la pendenza che ha, e non finisce sopra l'asse x
       const lontanoDallAsse = v => Math.abs(v - 4.5) < 0.35 ? (v < 4.5 ? 3.9 : 5.1) : v;
