@@ -40,6 +40,9 @@ laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e u
 Spiegazione di inizio livello: nel Percorso compare la prima volta che si arriva a un livello
 (caselle d'esempio con il segno, la condizione, due righe di testo); si riapre con "Spiegazione
 del livello", anche in Allenamento. I livelli spiegati si ricordano.
+Trofeo: superato anche l'ultimo livello (3 esercizi risolti nel Percorso) si conquista una coppa
+d'oro con ∞ inciso. Compare in una finestra dopo il grafico dell'esercizio che lo fa vincere, con
+la data; poi resta come tasto "Trofeo" accanto alle modalità e la riapre.
 Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
 L'avanzamento resta nel browser (localStorage).
 Due modalità: Percorso (livelli in ordine, si sbloccano) e Allenamento (qualunque livello, conta
