@@ -39,7 +39,8 @@ nella stessa colonna), 3 un asintoto orizzontale, 4 un asintoto verticale, 5 una
 laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e una condizione a x→±∞.
 Aiuto del livello: piccola finestra con le condizioni d'esempio, una scacchiera in miniatura animata
 (una freccia legge la condizione, si accendono colonna e riga, sceglie lo strumento, piazza il segno, poi arriva il
-grafico; in ciclo) e una frase. Si apre da sola nel Percorso la prima volta che si arriva a un livello; in
+grafico; in ciclo) e una frase. Mostra solo la novità del livello (6: un valore letto senza colori;
+7-8: un valore sul foglio con gli assi; l'8 non ha segni nuovi). Si apre da sola nel Percorso la prima volta che si arriva a un livello; in
 Allenamento mai da sola. Il tasto "? Aiuto" la richiama in entrambe le modalità. Senza movimento: scena finita, ferma.
 I livelli spiegati si ricordano.
 Trofeo: superato anche l'ultimo livello (3 esercizi risolti nel Percorso) si conquista una coppa
