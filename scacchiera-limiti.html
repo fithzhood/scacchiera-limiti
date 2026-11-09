@@ -46,27 +46,34 @@
     color: var(--inchiostro);
     font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   }
+  /* tutto in uno schermo, senza scorrere (anche dentro l'iframe di Compasso): la scacchiera prende
+     lo spazio che resta ed è quadrata, col lato pari al minore fra larghezza e altezza */
   main {
-    width: min(100vw - 32px, 560px);
-    margin: 16px auto;
+    height: 100vh;
+    height: 100svh;
+    padding: 10px 16px;
     display: grid;
-    gap: 20px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 10px;
   }
-  /* in orizzontale (telefono girato, tablet, PC) scacchiera a sinistra, alta quanto lo schermo,
-     e pannello a destra; la scacchiera resta ferma mentre il pannello scorre */
+  .campo { width: 100%; min-height: 0; container-type: size; display: grid; place-items: center; }
+  .campo > .tavola { width: min(100cqw, 100cqh); }
+  /* in orizzontale (telefono girato, tablet, PC) scacchiera a sinistra e pannello a destra */
   @media (orientation: landscape) and (min-width: 560px) {
     main {
-      width: min(100vw - 32px, 960px);
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: start;
-      margin: clamp(12px, 4vh, 40px) auto;
+      grid-template-rows: minmax(0, 1fr);
+      /* pannello largo quanto avanza dopo una scacchiera alta quanto lo schermo */
+      grid-template-columns: minmax(0, 1fr) clamp(270px, 100vw - 100vh - 60px, 420px);
+      grid-template-columns: minmax(0, 1fr) clamp(270px, 100vw - 100svh - 60px, 420px);
+      align-items: center;
+      gap: 20px;
+      padding: 12px 20px;
+      max-width: 1180px;
+      margin: 0 auto;
     }
-    main > .tavola {
-      width: min(100vh - 24px, 560px, 56vw);
-      width: min(100svh - 24px, 560px, 56vw);
-      position: sticky;
-      top: 12px;
-    }
+    .campo { height: 100%; }
   }
 
   /* ---------- scacchiera ---------- */
@@ -81,11 +88,12 @@
   .etichetta {
     display: grid;
     place-items: center;
-    font-size: clamp(10px, 2.6vw, 14px);
+    font-size: clamp(10px, 4.3cqmin, 17px);
+    font-weight: 700;
     color: var(--etichetta);
     user-select: none;
   }
-  .etichetta.inf { font-size: clamp(13px, 3.6vw, 19px); }
+  .etichetta.inf { font-size: clamp(12px, 5.4cqmin, 22px); }
   .casella {
     border: 0;
     padding: 0;
@@ -166,7 +174,15 @@
     background: linear-gradient(var(--carta-inf), var(--carta-inf)) 50% 50% / 86.54% 86.54% no-repeat;
   }
   body.solo-assi .tavola .casella.divisa::after,
-  body.solo-assi .tavola .casella.divisa-o::after { background: rgba(31, 42, 51, 0.16); }
+  body.solo-assi .tavola .casella.divisa-o::after,
+  body.solo-assi .meta, body:not(.solo-assi) .intera { display: none; }
+  .intera { position: absolute; inset: 0; border: 0; padding: 0; background: transparent; }
+  body.solo-assi .strumento[data-tipo="verticale"], body.solo-assi .strumento[data-tipo="orizzontale"],
+  body:not(.solo-assi) .strumento[data-tipo^="asintoto"] { display: none; }
+  /* asintoti piazzati: rette tratteggiate su tutto il piano */
+  .linee line { stroke: currentColor; stroke-width: 0.75; stroke-dasharray: 2.4 1.6; }
+  .linee .lampo { animation: lampo-linea 650ms ease-out; }
+  @keyframes lampo-linea { 30% { color: var(--evidenziatore); } }
   body.solo-assi .tavola .posto:hover { background: rgba(31, 42, 51, 0.06); }
   body.solo-assi .etichetta { visibility: hidden; }
   body:not(.solo-assi) .numeri,
@@ -183,17 +199,19 @@
   }
   .infiniti text {
     font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 4.4px;
+    font-size: 5px;
+    font-weight: 700;
     fill: var(--inchiostro);
   }
   /* i numeri stanno sopra i segni, con un alone, per restare leggibili */
   .tavola .numeri { z-index: 4; }
   .numeri text {
     font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 3.1px;
+    font-size: 3.8px;
+    font-weight: 700;
     fill: var(--inchiostro-tavola);
     stroke: var(--carta-inf);
-    stroke-width: 0.9px;
+    stroke-width: 1.1px;
     paint-order: stroke;
   }
   .numeri .tacca { stroke: var(--inchiostro-tavola); stroke-width: 0.32; }
@@ -222,33 +240,15 @@
   .tratto { fill: none; stroke: var(--funzione); stroke-width: 1.1; stroke-linejoin: round; stroke-linecap: round; }
 
   /* ---------- pannello ---------- */
-  .pannello { display: grid; gap: 18px; }
-  /* interruttore a due posizioni, un solo bordo attorno */
-  .modi {
-    display: inline-flex;
-    border: 1.5px solid var(--etichetta);
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 14px;
-  }
-  .modi button {
-    font: inherit;
-    font-size: 14px;
-    min-height: 38px;
-    padding: 0 14px;
-    border: 0;
-    background: transparent;
-    color: var(--inchiostro);
-    cursor: pointer;
-  }
-  .modi button[aria-pressed="true"] { background: var(--inchiostro); color: var(--fondo); }
-  .modi button:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: -2px; }
-  .livelli { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; max-width: 400px; }
+  .pannello { width: min(100%, 560px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; align-content: start; container-type: inline-size; }
+  .testa { display: flex; gap: 6px; align-items: center; }
+  .livelli { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
   .livelli button {
     font: inherit;
-    font-size: 15px;
+    font-size: 14px;
+    font-weight: 600;
     padding: 0;
-    height: 40px;
+    height: 34px;
     border-radius: 6px;
     border: 1.5px solid var(--etichetta);
     background: transparent;
@@ -261,8 +261,24 @@
     border-color: var(--inchiostro);
   }
   .livelli button:disabled { opacity: 0.3; cursor: default; }
-  .livello-info { margin: 8px 0 0; font-size: 14px; line-height: 1.4; }
-  .livello-info .avanzamento { color: var(--etichetta); }
+  .tondo {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1.5px solid var(--etichetta);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--inchiostro);
+    cursor: pointer;
+  }
+  .tondo svg { width: 18px; height: 18px; }
+  .tondo:focus-visible, .livelli button:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
+  .livello-info { margin: 0; display: flex; gap: 10px; font-size: 13px; line-height: 1.35; }
+  #livello-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .livello-info .avanzamento { flex: none; color: var(--etichetta); }
   h2 {
     margin: 0 0 8px;
     font-size: 13px;
@@ -274,17 +290,19 @@
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 10px;
   }
   .condizioni li {
     display: grid;
-    grid-template-columns: 22px 1fr;
+    grid-template-columns: 18px 1fr;
     align-items: center;
     font-family: var(--formula);
-    font-size: 21px;
-    min-height: 40px;
+    font-size: 18px;
+    min-height: 34px;
+    white-space: nowrap;
   }
-  .condizioni li .esito { width: 16px; height: 16px; }
+  .condizioni li .esito { width: 14px; height: 14px; }
   .condizioni li.giusto .esito { color: var(--giusto); }
   .condizioni li.sbagliato .esito { color: var(--sbagliato); }
   .lim {
@@ -299,18 +317,17 @@
 
   .strumenti {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 6px;
   }
   .strumento {
-    aspect-ratio: 1;
-    max-height: 56px;
+    height: 40px;
     border: 2px solid transparent;
     border-radius: 6px;
     background: var(--carta);
     color: var(--inchiostro-tavola);
     cursor: pointer;
-    padding: 6px;
+    padding: 5px;
   }
   .strumento svg { width: 100%; height: 100%; display: block; }
   .strumento[aria-pressed="true"] {
@@ -338,7 +355,9 @@
   }
   .azioni button[hidden] { display: none; }
   .azioni button:disabled { opacity: 0.35; cursor: default; }
-  .messaggio { margin: 0; min-height: 1.4em; font-size: 15px; line-height: 1.4; }
+  .pannello .azioni { flex-wrap: nowrap; gap: 6px; }
+  .pannello .azioni button { flex: 1 1 auto; min-height: 40px; padding: 0 8px; font-size: 14px; white-space: nowrap; }
+  .messaggio { margin: 0; min-height: 1.35em; font-size: 13px; line-height: 1.35; }
   .messaggio.risolto { color: var(--giusto); font-weight: 600; }
   .collegamento {
     font: inherit;
@@ -352,21 +371,19 @@
     text-underline-offset: 3px;
     cursor: pointer;
   }
-  #all-inizio { margin-left: 14px; }
-  #ricomincia { display: block; padding-left: 0; }
   #ricomincia[hidden] { display: none; }
   .spiegazione.conferma { width: min(100vw - 32px, 380px); }
   .conferma p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
   .conferma .azioni { gap: 8px; }
   .tasto-aiuto {
+    flex: none;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    min-height: 36px;
-    margin-top: 6px;
-    padding: 0 12px 0 6px;
+    gap: 6px;
+    height: 34px;
+    padding: 0 11px 0 4px;
     border: 1.5px solid var(--etichetta);
-    border-radius: 18px;
+    border-radius: 17px;
     background: transparent;
     color: var(--inchiostro);
     font: inherit;
@@ -385,6 +402,9 @@
     font-size: 14px;
   }
   .tasto-aiuto:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
+  .tasto-aiuto b { font-weight: 400; }
+  /* pannello stretto: dell'aiuto resta il tondo col punto di domanda */
+  @container (max-width: 400px) { .tasto-aiuto { padding: 0 4px; } .tasto-aiuto b, .azioni .lungo { display: none; } }
   .demo .confine { stroke: var(--inchiostro-tavola); stroke-width: 0.3; stroke-dasharray: 0.6 1.2; opacity: 0.5; }
   .demo .tacca { stroke: var(--inchiostro-tavola); stroke-width: 0.32; }
   .collegamento:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
@@ -435,11 +455,11 @@
   @media (orientation: portrait) { .demo { max-width: min(300px, (100vh - 370px) * 0.867); max-width: min(300px, (100svh - 370px) * 0.867); } }
   #aiuto-testo { grid-area: testo; margin: 0; font-size: 14px; line-height: 1.5; }
   .aiuto .azioni { grid-area: azioni; margin-top: 0; }
-  .demo text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 4.2px; fill: var(--etichetta); }
-  .demo text.inf { font-size: 5px; }
+  .demo text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 4.6px; font-weight: 700; fill: var(--etichetta); }
+  .demo text.inf { font-size: 5.4px; }
   body.colori .demo .lx { fill: var(--asse-x); }
   body.colori .demo .ly { fill: var(--asse-y); }
-  .demo .num text { font-size: 3.1px; fill: var(--inchiostro-tavola); stroke: var(--carta-inf); stroke-width: 0.9px; paint-order: stroke; }
+  .demo .num text { font-size: 3.8px; fill: var(--inchiostro-tavola); stroke: var(--carta-inf); stroke-width: 0.9px; paint-order: stroke; }
   .demo .banda { opacity: 0; transition: opacity 300ms; fill: var(--evidenziatore); fill-opacity: 0.4; }
   .demo .banda.su { opacity: 1; }
   body.colori .demo .banda.col { fill: #1F5FBF; fill-opacity: 0.28; }
@@ -478,16 +498,16 @@
     }
     .demo { width: auto; max-width: none; height: min(100vh - 64px, 360px); height: min(100svh - 64px, 360px); }
   }
-  /* telefono in orizzontale: pannello più fitto, così si scorre poco */
-  @media (orientation: landscape) and (max-height: 460px) {
-    main { gap: 16px; }
-    .pannello { gap: 12px; }
-    .modi { margin-bottom: 8px; }
-    .livelli button { height: 36px; }
-    .livello-info { margin-top: 4px; }
-    .condizioni { gap: 2px; }
-    .condizioni li { min-height: 34px; font-size: 19px; }
-    .strumento { max-height: 48px; }
+  /* schermo basso (telefono, iframe di Compasso, telefono girato): pannello più fitto */
+  @media (max-height: 600px) {
+    main { padding: 8px 12px; gap: 8px; }
+    .pannello { gap: 5px; }
+    .livelli button, .tondo, .tasto-aiuto { height: 30px; }
+    .tondo { width: 30px; }
+    .tasto-aiuto span { width: 22px; height: 22px; }
+    .condizioni li { min-height: 30px; font-size: 17px; }
+    .strumento { height: 36px; padding: 4px; }
+    .pannello .azioni button { min-height: 36px; }
   }
 
   /* ---------- pagina di partenza ---------- */
@@ -525,7 +545,9 @@
   .scelta span { font-size: 13px; line-height: 1.45; opacity: 0.85; }
   .scelta .stato { font-weight: 600; opacity: 1; }
   .scelta:focus-visible { outline: 3px solid var(--evidenziatore); outline-offset: 2px; }
-  .partenza .segno-trofeo { justify-self: center; margin: 0; }
+  .piede { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: center; align-items: center; }
+  .piede:not(:has(> :not([hidden]))) { display: none; }
+  .partenza .segno-trofeo { margin: 0; }
   .disegno .tratto { stroke-width: 1.6; }
   .disegno .alone { stroke-width: 3.6; }
   /* in orizzontale: disegno a sinistra, titolo e scelte a destra */
@@ -533,7 +555,7 @@
     .partenza { width: min(100vw - 32px, 820px); grid-template-columns: auto minmax(0, 1fr); column-gap: 32px; align-items: center; }
     .partenza .disegno { grid-row: 1 / span 3; width: min(100vh - 64px, 300px); width: min(100svh - 64px, 300px, 40vw); }
     .partenza h1, .partenza .sotto { text-align: left; }
-    .partenza .segno-trofeo { justify-self: start; }
+    .piede { justify-content: flex-start; }
   }
   @media (orientation: landscape) and (max-height: 460px) {
     .partenza { padding: 12px 0; gap: 10px; }
@@ -548,6 +570,14 @@
   @media (orientation: portrait) and (max-height: 700px) {
     .partenza { padding: 14px 0; gap: 12px; }
     .partenza .disegno { width: min(52vw, 30vh); width: min(52vw, 30svh); }
+  }
+  @media (orientation: portrait) and (max-height: 600px) {
+    .partenza { padding: 10px 0; gap: 9px; }
+    .partenza .disegno { width: min(44vw, 24vh); width: min(44vw, 24svh); }
+    .partenza h1 { font-size: 22px; }
+    .partenza .sotto { font-size: 13px; line-height: 1.4; }
+    .scelta { padding: 9px 14px; gap: 2px; }
+    .scelta b { font-size: 16px; }
   }
 
   /* ---------- trofeo di fine percorso ---------- */
@@ -602,37 +632,28 @@
     <button class="scelta primario" data-scelta="percorso"><b>Percorso</b><span>Otto livelli in ordine, ognuno con la sua spiegazione.</span><span class="stato" id="pa-stato"></span></button>
     <button class="scelta" data-scelta="allenamento"><b>Allenamento</b><span>Qualunque livello, quando vuoi. Non conta per il percorso.</span></button>
   </div>
-  <button class="segno-trofeo" id="pa-trofeo" hidden aria-label="Trofeo del percorso"></button>
+  <div class="piede">
+    <button class="segno-trofeo" id="pa-trofeo" hidden aria-label="Trofeo del percorso"></button>
+    <button class="collegamento" id="ricomincia" hidden>Ricomincia il percorso</button>
+  </div>
 </section>
 <main>
-  <div class="tavola" id="tavola" aria-label="Scacchiera 9 per 9"></div>
+  <div class="campo"><div class="tavola" id="tavola" aria-label="Scacchiera 9 per 9"></div></div>
 
   <section class="pannello">
-    <div>
-      <div class="modi" id="modi" role="group" aria-label="Modalità">
-        <button data-modo="percorso">Percorso</button>
-        <button data-modo="allenamento">Allenamento</button>
-      </div><button class="segno-trofeo" id="segno-trofeo" hidden aria-label="Trofeo del percorso"></button>
-      <h2 id="titolo-livelli">Livello</h2>
-      <div class="livelli" id="livelli" role="group" aria-labelledby="titolo-livelli"></div>
-      <p class="livello-info"><span id="livello-nome"></span><br><span class="avanzamento" id="avanzamento"></span></p>
-      <button class="tasto-aiuto" id="spiega"><span aria-hidden="true">?</span>Aiuto</button>
-      <button class="collegamento" id="all-inizio">Pagina iniziale</button>
-      <button class="collegamento" id="ricomincia" hidden>Ricomincia il percorso</button>
+    <div class="testa">
+      <div class="livelli" id="livelli" role="group" aria-label="Livello"></div>
+      <button class="tasto-aiuto" id="spiega" aria-label="Aiuto" title="Aiuto"><span aria-hidden="true">?</span><b>Aiuto</b></button>
+      <button class="tondo" id="all-inizio" aria-label="Pagina iniziale" title="Pagina iniziale"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 9.5L10 3.5L17 9.5"/><path d="M5 8V16.5H15V8"/></svg></button>
     </div>
-    <div>
-      <h2>Condizioni</h2>
-      <ol class="condizioni" id="condizioni"></ol>
-    </div>
-    <div>
-      <h2 id="titolo-strumenti">Segno da piazzare</h2>
-      <div class="strumenti" id="strumenti" role="group" aria-labelledby="titolo-strumenti"></div>
-    </div>
+    <p class="livello-info"><span id="livello-nome"></span><span class="avanzamento" id="avanzamento"></span></p>
+    <ol class="condizioni" id="condizioni" aria-label="Condizioni"></ol>
+    <div class="strumenti" id="strumenti" role="group" aria-label="Segno da piazzare"></div>
     <div class="azioni">
-      <button id="prossimo" hidden>Prossimo livello</button>
+      <button id="prossimo" hidden aria-label="Prossimo livello">Prossimo<span class="lungo"> livello</span></button>
       <button class="primario" id="controlla">Controlla</button>
-      <button id="soluzione" hidden>Mostra soluzione</button>
-      <button id="nuovo">Nuovo esercizio</button>
+      <button id="soluzione" hidden>Soluzione</button>
+      <button id="nuovo">Nuovo</button>
     </div>
     <p class="messaggio" id="messaggio" aria-live="polite"></p>
   </section>
@@ -679,7 +700,10 @@
     pieno:       { nome: "Pallino pieno",          svg: '<circle cx="10" cy="10" r="5" fill="currentColor"/>' },
     vuoto:       { nome: "Pallino vuoto",          svg: '<circle cx="10" cy="10" r="4.4" style="fill: var(--pallino-fondo)" stroke="currentColor" stroke-width="1.8"/>' },
     verticale:   { nome: "Tratteggio verticale",   svg: '<line x1="10" y1="1.5" x2="10" y2="18.5"/>' },
+    // livelli solo assi: al posto dei tratteggi a metà casella, la retta intera dell'asintoto
+    asintotoV:   { nome: "Asintoto verticale",     svg: '<line x1="11" y1="0.5" x2="11" y2="19.5"/><path d="M2 18.5C6.5 17.5 8.6 12 8.8 1.5" fill="none" stroke-dasharray="none" stroke-width="1.4" opacity="0.55"/>' },
     orizzontale: { nome: "Tratteggio orizzontale", svg: '<line x1="1.5" y1="10" x2="18.5" y2="10"/>' },
+    asintotoO:   { nome: "Asintoto orizzontale",   svg: '<line x1="0.5" y1="9" x2="19.5" y2="9"/><path d="M1.5 18C7 17 12 11.8 19.5 11.3" fill="none" stroke-dasharray="none" stroke-width="1.4" opacity="0.55"/>' },
     sale:        { nome: "Tratteggio in salita",   svg: '<line x1="3" y1="17" x2="17" y2="3"/>' },
     scende:      { nome: "Tratteggio in discesa",  svg: '<line x1="3" y1="3" x2="17" y2="17"/>' },
   };
@@ -733,6 +757,11 @@
       const nome = `x ${ETICHETTE[x]}, y ${ETICHETTE[y]}`;
       if (taglio) {
         cella.classList.add(taglio === "v" ? "divisa" : "divisa-o");
+        // nei livelli solo assi la casella del bordo resta intera
+        const intera = document.createElement("button");
+        intera.className = "intera";
+        nuovoPosto(intera, `${x},${y}`, x + 0.5, nome);
+        cella.append(intera);
         for (const [lato, parola, classe, du] of META[taglio]) {
           const b = document.createElement("button");
           b.className = "meta " + classe;
@@ -759,8 +788,27 @@
       </g>
     </svg>
     <svg class="sopra numeri" id="numeri" viewBox="0 0 90 90" aria-hidden="true"></svg>
+    <svg class="sopra linee" id="linee" viewBox="0 0 90 90" aria-hidden="true"></svg>
     <svg class="sopra grafico" id="grafico" viewBox="0 0 90 90" aria-hidden="true"></svg>`);
   const grafico = document.getElementById("grafico");
+  // asintoti piazzati (livelli solo assi): "av,a" retta x = a, "ao,b" retta y = b
+  {
+    const linee = document.getElementById("linee");
+    for (let i = 1; i < N - 1; i++) {
+      for (const [dir, pre] of [["v", "av"], ["o", "ao"]]) {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.classList.add("posto");
+        g.dataset.linea = dir;
+        g.dataset.pos = i;
+        linee.append(g);
+        posti[`${pre},${i}`] = g;
+        posU[`${pre},${i}`] = dir === "v" ? i + 0.5 : 0.5;
+      }
+    }
+  }
+  const lineaAsintoto = (dir, i) => dir === "v"
+    ? `<line x1="${i * 10 + 5}" y1="0" x2="${i * 10 + 5}" y2="90"/>`
+    : `<line x1="0" y1="${85 - i * 10}" x2="90" y2="${85 - i * 10}"/>`;
 
   // numeri sugli assi (visibili solo nei livelli senza scacchiera): tacche al centro di ogni
   // casella, e una linea puntinata che separa la fascia dell'infinito dalla parte finita
@@ -795,17 +843,22 @@
   // ---------- strumenti ----------
   const strumentiEl = document.getElementById("strumenti");
   let strumento = "pieno";
+  // strumenti del livello: con i soli assi gli asintoti prendono il posto dei tratteggi a metà casella
+  const strumentiDi = assi => Object.keys(SEGNI).filter(t =>
+    assi ? t !== "verticale" && t !== "orizzontale" : !t.startsWith("asintoto"));
+  function scegliStrumento(tipo) {
+    strumento = tipo;
+    strumentiEl.querySelectorAll(".strumento").forEach(s => s.setAttribute("aria-pressed", s.dataset.tipo === tipo));
+  }
   for (const tipo of Object.keys(SEGNI)) {
     const b = document.createElement("button");
     b.className = "strumento";
+    b.dataset.tipo = tipo;
     b.title = SEGNI[tipo].nome;
     b.setAttribute("aria-label", SEGNI[tipo].nome);
     b.setAttribute("aria-pressed", tipo === strumento);
     b.innerHTML = disegnoSegno(tipo);
-    b.addEventListener("click", () => {
-      strumento = tipo;
-      strumentiEl.querySelectorAll(".strumento").forEach(s => s.setAttribute("aria-pressed", s === b));
-    });
+    b.addEventListener("click", () => scegliStrumento(tipo));
     strumentiEl.append(b);
   }
 
@@ -825,8 +878,12 @@
   // Una condizione è descritta dal suo significato; testo e segni attesi si ricavano da lì.
   //   val  f(a) = y          lim  lim x→a f = y          vert lim x→a(±) f = ±∞
   //   oriz lim x→±∞ f = y    obl  lim x→±∞ f = ±∞
-  function completa(c) {
+  // con i soli assi (assi = true) i limiti infiniti al finito e i limiti finiti all'infinito si
+  // segnano con la retta dell'asintoto: x = a oppure y = b
+  function completa(c, assi) {
     const k = `${c.a},${c.y}`;
+    if (assi && c.k === "vert") return { ...c, html: `${lim(c.a, c.lato === "both" ? "" : c.lato)} = ${ny(c.y)}`, attesi: [[`av,${c.a}`, "asintotoV"]] };
+    if (assi && c.k === "oriz") return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[`ao,${c.y}`, "asintotoO"]] };
     switch (c.k) {
       case "val":  return { ...c, html: `${fDi(c.a)} = ${ny(c.y)}`, attesi: [[k, "pieno"]] };
       case "lim":  return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[k, "vuoto"]] };
@@ -892,7 +949,7 @@
         else cond.push({ k: "obl", a: lato, y: infinito() });
       }
     } while (cond.length < L.min || cond.length > L.max || !(L.richiede ?? []).every(r => HA[r](cond)));
-    return mescola(cond).map(completa);
+    return mescola(cond).map(c => completa(c, !!L.assi));
   }
 
   // ---------- una funzione che rispetta le condizioni ----------
@@ -908,10 +965,13 @@
     return { u, v: y + 1 - MARG - py * SC };
   }
   // estremo interno del tratteggio verticale nella metà (lato) della casella (a, Y)
-  const attaccoVerticale = (a, Y, lato) => ({ ...puntoSegno(a, Y, lato, 10, Y === PIU_INF ? 18.5 : 1.5), alto: Y === PIU_INF });
+  const attaccoVerticale = (a, Y, lato, assi) => assi
+    ? { u: a + 0.5 + (lato === "s" ? -0.14 : 0.14), v: Y === PIU_INF ? 8.9 : 0.1, alto: Y === PIU_INF }
+    : { ...puntoSegno(a, Y, lato, 10, Y === PIU_INF ? 18.5 : 1.5), alto: Y === PIU_INF };
   // estremo interno del segno a x→±∞, con la pendenza del segno
-  function attaccoBordo(lato, b) {
+  function attaccoBordo(lato, b, assi) {
     // asintoto orizzontale: la metà (sopra o sotto) si sceglie dopo, guardando da dove arriva la curva
+    if (b.h != null && assi) return { u: lato === MENO_INF ? 0.1 : 8.9, v: b.h + 0.5, m: 0, oriz: b.h, vicino: 0.14 };
     if (b.h != null) return { ...puntoSegno(lato, b.h, null, lato === MENO_INF ? 18.5 : 1.5, 10), m: 0, oriz: b.h };
     const alto = b.inf === PIU_INF;
     if (lato === MENO_INF) return alto ? { ...puntoSegno(0, 8, null, 17, 17), m: -1 } : { ...puntoSegno(0, 0, null, 17, 3), m: 1 };
@@ -934,15 +994,16 @@
       if (c.k === "obl") bordo[c.a] = { inf: c.y };
     }
     const colAsintoti = Object.keys(vert).map(Number).sort((p, q) => p - q);
+    const assi = !!LIVELLI[livello()].assi;
     const segmenti = [];
 
     for (let i = 0; i <= colAsintoti.length; i++) {
       const primo = i === 0, ultimo = i === colAsintoti.length;
       const aPrima = primo ? null : colAsintoti[i - 1], aDopo = ultimo ? null : colAsintoti[i];
-      const VS = primo ? null : attaccoVerticale(aPrima, vert[aPrima].d, "d");
-      const VE = ultimo ? null : attaccoVerticale(aDopo, vert[aDopo].s, "s");
+      const VS = primo ? null : attaccoVerticale(aPrima, vert[aPrima].d, "d", assi);
+      const VE = ultimo ? null : attaccoVerticale(aDopo, vert[aDopo].s, "s", assi);
       const bs = primo ? bordo[MENO_INF] : null, bd = ultimo ? bordo[PIU_INF] : null;
-      const inizio = bs ? attaccoBordo(MENO_INF, bs) : null, fine = bd ? attaccoBordo(PIU_INF, bd) : null;
+      const inizio = bs ? attaccoBordo(MENO_INF, bs, assi) : null, fine = bd ? attaccoBordo(PIU_INF, bd, assi) : null;
 
       const lo = VS?.u ?? inizio?.u ?? 1, hi = VE?.u ?? fine?.u ?? 8;
       let pts = Object.entries(ancore).map(([a, v]) => ({ u: +a + 0.5, v })).filter(p => p.u > lo && p.u < hi);
@@ -966,7 +1027,8 @@
         const ordine = verso > 0 ? pts : [...pts].reverse();
         const diverso = ordine.find(p => p !== att && Math.abs(p.v - c) > 1e-9);
         const sopra = !!diverso && diverso.v > c;
-        att.v = att.oriz + (sopra ? 0.75 : 0.25);
+        const d = att.vicino ?? 0.25;
+        att.v = c + (sopra ? d : -d);
       };
       scegliMeta(inizio, +1);
       scegliMeta(fine, -1);
@@ -1113,7 +1175,7 @@
   const elMsg = document.getElementById("messaggio");
   const btnControlla = document.getElementById("controlla");
   const btnSoluzione = document.getElementById("soluzione");
-  const MSG_INIZIO = "Piazza un segno per ogni condizione, poi premi Controlla.";
+  const MSG_INIZIO = "Un segno per condizione, poi Controlla.";
 
   const SPUNTA = '<svg class="esito" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
   const CROCE = '<svg class="esito" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
@@ -1121,7 +1183,7 @@
   function blocca(si) {
     bloccato = si;
     Object.values(posti).forEach(b => b.disabled = si);
-    btnControlla.disabled = si;
+    btnControlla.hidden = si;
     // a esercizio chiuso il tasto principale diventa Prossimo livello
     btnProssimo.classList.toggle("primario", si);
   }
@@ -1150,6 +1212,7 @@
   function azzeraPercorso() {
     prog.liv = 0; prog.massimo = 0;
     prog.risolti = LIVELLI.map(() => 0);
+    prog.spiegati = [];
   }
   if (prog.risolti[LIVELLI.length - 1] >= PER_LIVELLO) {
     if (!prog.trofei.length) prog.trofei.push(oggi());
@@ -1162,12 +1225,6 @@
   const ultimoLivello = () => prog.liv === LIVELLI.length - 1;
   const superato = () => !allenamento() && prog.risolti[prog.liv] >= PER_LIVELLO && !ultimoLivello();
   const btnProssimo = document.getElementById("prossimo");
-
-  const elModi = document.getElementById("modi");
-  elModi.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-    if (prog.modo === b.dataset.modo) return;
-    prog.modo = b.dataset.modo; salva(); nuovo();
-  }));
 
   const elLivelli = document.getElementById("livelli");
   LIVELLI.forEach((_, i) => {
@@ -1186,7 +1243,7 @@
     const L = LIVELLI[livello()];
     document.body.classList.toggle("colori", L.colori);
     document.body.classList.toggle("solo-assi", !!L.assi);
-    elModi.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.modo === prog.modo));
+    if (!strumentiDi(!!L.assi).includes(strumento)) scegliStrumento("pieno");
     [...elLivelli.children].forEach((b, i) => {
       const chiuso = !allenamento() && i > prog.massimo;
       b.setAttribute("aria-pressed", i === livello());
@@ -1196,12 +1253,10 @@
     document.getElementById("livello-nome").textContent = L.nome;
     const n = prog.risolti[prog.liv];
     document.getElementById("avanzamento").textContent =
-      allenamento() ? `Allenamento, non conta per il percorso. Esercizi risolti: ${risoltiAllenamento}`
-      : superato() ? `Livello superato, esercizi risolti: ${n}`
-      : `Esercizi risolti: ${n} di ${PER_LIVELLO}`;
+      allenamento() ? `Allenamento · risolti ${risoltiAllenamento}`
+      : superato() ? `Superato · risolti ${n}`
+      : `${n} di ${PER_LIVELLO}`;
     btnProssimo.hidden = !superato();
-    mostraBacheca();
-    document.getElementById("ricomincia").hidden = allenamento() || !iniziato();
   }
 
   // ---------- trofeo ----------
@@ -1215,12 +1270,11 @@
       <rect class="coppa-zoccolo" x="17" y="51" width="30" height="8" rx="1.6"/>
     </svg>`;
   document.getElementById("tr-coppa").innerHTML = COPPA;
-  const segnoTrofeo = document.getElementById("segno-trofeo");
   const dlgTrofeo = document.getElementById("trofeo");
   // bacheca: la coppa con ×N, quante volte si è finito il percorso
   function mostraBacheca() {
     const n = prog.trofei.length;
-    for (const b of [segnoTrofeo, document.getElementById("pa-trofeo")]) {
+    for (const b of [document.getElementById("pa-trofeo")]) {
       b.hidden = !n;
       b.innerHTML = COPPA + `<span>Trofeo</span><span class="quanti">×${n}</span>`;
       b.setAttribute("aria-label", n === 1 ? "Trofeo del percorso, conquistato una volta" : `Trofeo del percorso, conquistato ${n} volte`);
@@ -1238,7 +1292,6 @@
     void dlgTrofeo.offsetWidth; // riavvia l'arrivo della coppa
     dlgTrofeo.classList.add("aperto");
   }
-  segnoTrofeo.addEventListener("click", apriTrofeo);
   // chiuso il trofeo appena vinto, si riparte dal livello 1
   dlgTrofeo.addEventListener("close", () => {
     if (!trofeoAppenaVinto || dlgTrofeo.open) return;
@@ -1252,8 +1305,7 @@
   dlgConferma.addEventListener("close", () => {
     if (dlgConferma.returnValue !== "si") return;
     azzeraPercorso();
-    prog.spiegati = [];   // da capo davvero: le spiegazioni tornano a comparire
-    salva(); nuovo();
+    salva(); mostraPartenza();
   });
 
   btnProssimo.addEventListener("click", () => {
@@ -1294,8 +1346,18 @@
     const c = classe ? ` class="${classe}"` : "";
     if (tipo === "pieno") return `<circle${c} cx="${cx}" cy="${cy}" r="2.5" fill="currentColor"/>`;
     if (tipo === "vuoto") return `<circle${c} cx="${cx}" cy="${cy}" r="2.2" style="fill: var(--pallino-fondo)" stroke="currentColor" stroke-width="0.9"/>`;
+    const tr = ` stroke="currentColor" stroke-width="0.75" stroke-dasharray="2.4 1.6"`;
+    if (tipo === "asintotoV") return `<line${c} x1="${cx}" y1="7" x2="${cx}" y2="97"${tr}/>`;
+    if (tipo === "asintotoO") return `<line${c} x1="7" y1="${cy}" x2="97" y2="${cy}"${tr}/>`;
     const [a, b, e, f] = { verticale: [0, -4.2, 0, 4.2], orizzontale: [-4.2, 0, 4.2, 0], sale: [-3.5, 3.5, 3.5, -3.5], scende: [-3.5, -3.5, 3.5, 3.5] }[tipo];
     return `<line${c} x1="${cx + a}" y1="${cy + b}" x2="${cx + e}" y2="${cy + f}" stroke="currentColor" stroke-width="1.1" stroke-dasharray="1.5 1.1"/>`;
+  }
+  // icona dello strumento nella fila sotto la scacchiera animata
+  function iconaDemo(tipo, cx, cy) {
+    const tr = `stroke="currentColor" stroke-width="0.7" stroke-dasharray="1.4 0.9"`, ramo = `fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.55"`;
+    if (tipo === "asintotoV") return `<line x1="${cx + 0.6}" y1="${cy - 4.8}" x2="${cx + 0.6}" y2="${cy + 4.8}" ${tr}/><path d="M${cx - 4} ${cy + 4.2}C${cx - 1.5} ${cy + 3.6} ${cx - 0.6} ${cy + 1} ${cx - 0.5} ${cy - 4.8}" ${ramo}/>`;
+    if (tipo === "asintotoO") return `<line x1="${cx - 4.8}" y1="${cy - 0.6}" x2="${cx + 4.8}" y2="${cy - 0.6}" ${tr}/><path d="M${cx - 4.6} ${cy + 4}C${cx - 1.5} ${cy + 3.5} ${cx + 1} ${cy + 0.9} ${cx + 4.8} ${cy + 0.6}" ${ramo}/>`;
+    return segnoIn(tipo, cx, cy);
   }
   function tavolaDemo(L) {
     const assi = !!L.assi;
@@ -1305,8 +1367,8 @@
       const inf = !alFinito(x) || !alFinito(y), scura = (x + y) % 2 === 0, t = taglioDi(x, y);
       if (!assi) s += `<rect x="${DX(x)}" y="${DY(y)}" width="10" height="10" style="fill: var(${inf ? (scura ? "--ardesia-inf" : "--carta-inf") : (scura ? "--ardesia" : "--carta")})"/>`;
       const o = assi ? 0.16 : 0.38;
-      if (t === "v") s += `<line x1="${DX(x) + 5}" y1="${DY(y)}" x2="${DX(x) + 5}" y2="${DY(y) + 10}" stroke="rgb(31,42,51)" stroke-opacity="${o}" stroke-width="0.25"/>`;
-      if (t === "o") s += `<line x1="${DX(x)}" y1="${DY(y) + 5}" x2="${DX(x) + 10}" y2="${DY(y) + 5}" stroke="rgb(31,42,51)" stroke-opacity="${o}" stroke-width="0.25"/>`;
+      if (t === "v" && !assi) s += `<line x1="${DX(x) + 5}" y1="${DY(y)}" x2="${DX(x) + 5}" y2="${DY(y) + 10}" stroke="rgb(31,42,51)" stroke-opacity="${o}" stroke-width="0.25"/>`;
+      if (t === "o" && !assi) s += `<line x1="${DX(x)}" y1="${DY(y) + 5}" x2="${DX(x) + 10}" y2="${DY(y) + 5}" stroke="rgb(31,42,51)" stroke-opacity="${o}" stroke-width="0.25"/>`;
     }
     s += `<rect class="banda col" x="0" y="7" width="10" height="90"/><rect class="banda riga" x="7" y="0" width="90" height="10"/>`;
     s += `<g style="fill: var(--inchiostro-tavola); stroke: var(--inchiostro-tavola)">
@@ -1333,20 +1395,20 @@
       }
     }
     s += `<g class="d-grafico"></g><g class="d-segni"></g>`;
-    TIPI.forEach((tipo, k) => {
+    strumentiDi(assi).forEach((tipo, k) => {
       const [x, y] = STR(k);
-      s += `<g class="d-str" data-tipo="${tipo}"><rect x="${x}" y="${y}" width="12" height="12" rx="1.5"/>${segnoIn(tipo, x + 6, y + 6)}</g>`;
+      s += `<g class="d-str" data-tipo="${tipo}"><rect x="${x}" y="${y}" width="12" height="12" rx="1.5"/>${iconaDemo(tipo, x + 6, y + 6)}</g>`;
     });
     s += `<g class="d-dito"><circle class="d-onda" r="3"/><path class="d-punta" d="M0 0V7.6L1.9 5.8L3.2 8.7L4.6 8.1L3.3 5.2H5.9Z"/></g></svg>`;
     return s;
   }
   // i rami del grafico: funzioni v(u) campionate e tagliate alla parte finita
-  function percorso(rami) {
+  function percorso(rami, [lo, hi] = [0.6, 8.4]) {
     return rami.map(([f, u0, u1]) => {
       const p = [];
-      for (let i = 0; i <= 90; i++) {
-        const u = u0 + (u1 - u0) * i / 90, v = f(u);
-        if (v >= 0.6 && v <= 8.4) p.push(`${GU(u).toFixed(2)},${GV(v).toFixed(2)}`);
+      for (let i = 0; i <= 160; i++) {
+        const u = u0 + (u1 - u0) * i / 160, v = f(u);
+        if (v >= lo && v <= hi) p.push(`${GU(u).toFixed(2)},${GV(v).toFixed(2)}`);
       }
       return "M" + p.join("L");
     });
@@ -1355,6 +1417,14 @@
   // Una scena per livello: le condizioni, la frase, i passi dell'animazione.
   //   cond k: si guarda la condizione k     colonna x / riga y: la si cerca sulla scacchiera
   //   strumento t: si sceglie il segno      tocca x y [metà]: si piazza     grafico: arriva la funzione
+  // livelli solo assi: gli asintoti si piazzano come rette, toccando la loro colonna o riga
+  const SCENA_ASSI = {
+    cond: [`${lim(2)} = ${ny(8)}`, `${lim(PIU_INF)} = ${ny(3)}`],
+    testo: `Limite infinito: asintoto verticale, tocca la sua colonna. Limite finito all'infinito: asintoto orizzontale, tocca la sua riga.`,
+    passi: [["cond", 0], ["colonna", 2], ["strumento", "asintotoV"], ["tocca", 2, 6],
+            ["cond", 1], ["riga", 3], ["strumento", "asintotoO"], ["tocca", 6, 3], ["grafico"]],
+    rami: [[u => 4.5 + 0.875 / (2.5 - u), 1, 2.47], [u => 3.5 + 0.9 / (u - 2.5), 2.53, 8.9]],
+    asintoti: [["v", 2.5], ["o", 3.5]], fino: [0.1, 8.9] };
   const AIUTI = [
     { cond: [`${fDi(6)} = ${ny(3)}`],
       testo: `Valore: pallino pieno. Numero <span class="cx">blu</span>: la colonna. Numero <span class="cy">rosso</span>: la riga.`,
@@ -1383,14 +1453,8 @@
       testo: `Niente colori. Dentro <i>f</i>( ) o sotto lim: la colonna. Dopo l'uguale: la riga.`,
       passi: [["cond", 0], ["colonna", 2], ["riga", 5], ["tocca", 2, 5], ["grafico"]],
       rami: [[u => 5.5 + 0.5 * (u - 2.5) - 0.15 * (u - 2.5) ** 2, 1, 8]] },
-    { cond: [`${fDi(5)} = ${ny(6)}`],
-      testo: `Solo gli assi. Il segno va dove andrebbe sulla scacchiera; ±∞ stanno oltre la linea puntinata.`,
-      passi: [["cond", 0], ["colonna", 5], ["riga", 6], ["tocca", 5, 6], ["grafico"]],
-      rami: [[u => 6.5 + 0.4 * (u - 5.5) - 0.12 * (u - 5.5) ** 2, 1, 8]] },
-    { cond: [`${fDi(5)} = ${ny(6)}`],
-      testo: `Nessun segno nuovo: come il livello 7, con più condizioni.`,
-      passi: [["cond", 0], ["colonna", 5], ["riga", 6], ["tocca", 5, 6], ["grafico"]],
-      rami: [[u => 6.5 + 0.4 * (u - 5.5) - 0.12 * (u - 5.5) ** 2, 1, 8]] },
+    SCENA_ASSI,
+    { ...SCENA_ASSI, testo: `Nessun segno nuovo: come il livello 7, con più condizioni.` },
   ];
 
   const dlg = document.getElementById("spiegazione");
@@ -1405,7 +1469,7 @@
       s += dir === "v" ? `<line class="d-asintoto" x1="${GU(w)}" y1="7" x2="${GU(w)}" y2="97"/>`
                        : `<line class="d-asintoto" x1="7" y1="${GV(w)}" x2="97" y2="${GV(w)}"/>`;
     }
-    for (const d of percorso(sc.rami)) s += `<path class="alone" pathLength="1" d="${d}"/><path class="tratto" pathLength="1" d="${d}"/>`;
+    for (const d of percorso(sc.rami, sc.fino)) s += `<path class="alone" pathLength="1" d="${d}"/><path class="tratto" pathLength="1" d="${d}"/>`;
     graf.innerHTML = s;
   }
 
@@ -1439,7 +1503,7 @@
           bandaR.setAttribute("y", DY(a)); bandaR.classList.add("su"); attiva.classList.add("vedi-y");
           await attesa(900, g);
         } else if (azione === "strumento") {
-          const [x, y] = STR(TIPI.indexOf(a));
+          const r = svg.querySelector(`.d-str[data-tipo="${a}"] rect`), x = +r.getAttribute("x"), y = +r.getAttribute("y");
           vai([x + 6, y + 6]); await attesa(650, g); await tocco();
           tipo = a; scegli(tipo);
           await attesa(250, g);
@@ -1481,7 +1545,7 @@
     document.getElementById("aiuto-demo").innerHTML = tavolaDemo(LIVELLI[i]);
     document.getElementById("aiuto-testo").innerHTML = sc.testo;
     document.getElementById("sp-chiudi").textContent = prima ? "Inizia" : "Torna all'esercizio";
-    if (!prog.spiegati.includes(i)) { prog.spiegati.push(i); salva(); }
+    if (!allenamento() && !prog.spiegati.includes(i)) { prog.spiegati.push(i); salva(); }
     if (!dlg.open) dlg.showModal();
     const g = ++giroAiuto;
     if (riduciMoto) aiutoFermo(sc);
@@ -1502,12 +1566,19 @@
   function disegnaTutto() {
     for (const [k, b] of Object.entries(posti)) {
       const tipo = segni.get(k);
-      b.innerHTML = tipo ? disegnoSegno(tipo, b.dataset.taglio || "") : "";
+      if (b.dataset.linea) b.innerHTML = tipo ? lineaAsintoto(b.dataset.linea, +b.dataset.pos) : "";
+      else b.innerHTML = tipo ? disegnoSegno(tipo, b.dataset.taglio || "") : "";
     }
   }
 
   function tocca(k) {
     if (bloccato) return;
+    // asintoto: basta toccare un punto qualsiasi della sua colonna (verticale) o riga (orizzontale)
+    if (strumento.startsWith("asintoto")) {
+      const [x, y] = k.split(",").map(Number), v = strumento === "asintotoV", i = v ? x : y;
+      if (!alFinito(i)) return;
+      k = (v ? "av," : "ao,") + i;
+    }
     if (segni.get(k) === strumento) segni.delete(k);
     else segni.set(k, strumento);
     pulisciEsito();
@@ -1549,22 +1620,20 @@
         salva();
         trofeoAppenaVinto = true;
         mostraBacheca();
-        document.getElementById("ricomincia").hidden = true;
-        document.getElementById("avanzamento").textContent = "Percorso completato. Si ricomincia dal livello 1.";
+        document.getElementById("avanzamento").textContent = "Percorso completato";
       }
       elMsg.className = "messaggio risolto";
-      elMsg.textContent = appenaFinito ? "Esercizio risolto. Percorso completato."
-        : appenaSuperato ? `Esercizio risolto. Livello ${prog.liv + 1} superato.` : "Esercizio risolto";
+      elMsg.textContent = appenaFinito ? "Risolto. Percorso completato: si ricomincia dal livello 1."
+        : appenaSuperato ? `Risolto. Livello ${prog.liv + 1} superato.` : "Esercizio risolto";
       blocca(true);
       // il trofeo arriva dopo il grafico, per non coprirlo
       mostraGrafico(appenaFinito ? apriTrofeo : null);
       return;
     }
-    let t = giuste === 0 ? `Nessuna delle ${tot} condizioni è a posto`
-      : giuste === 1 ? `1 condizione su ${tot} è a posto` : `${giuste} condizioni su ${tot} sono a posto`;
-    if (inPiu) t += inPiu === 1 ? ", 1 segno non corrisponde a nessuna condizione" : `, ${inPiu} segni non corrispondono a nessuna condizione`;
+    let t = `A posto ${giuste} su ${tot}`;
+    if (inPiu) t += inPiu === 1 ? ", 1 segno in più" : `, ${inPiu} segni in più`;
     elMsg.className = "messaggio";
-    elMsg.textContent = t + ". Correggi e controlla di nuovo.";
+    elMsg.textContent = t + ". Correggi e ricontrolla.";
     btnSoluzione.hidden = false;
   }
 
@@ -1577,7 +1646,7 @@
     blocca(true);
     btnSoluzione.hidden = true;
     elMsg.className = "messaggio";
-    elMsg.textContent = "In arancione i segni che mancavano o erano sbagliati. Questo esercizio non conta per il livello.";
+    elMsg.textContent = "In arancione la soluzione. Non conta per il livello.";
     mostraGrafico();
   }
 
@@ -1628,6 +1697,7 @@
       : prog.trofei.length ? "Si ricomincia dal livello 1."
       : "Si comincia dal livello 1.";
     mostraBacheca();
+    document.getElementById("ricomincia").hidden = !iniziato();
     document.body.classList.add("in-partenza");
     scrollTo(0, 0);
   }

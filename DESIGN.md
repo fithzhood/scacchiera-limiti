@@ -34,31 +34,40 @@ Assi sottili, così i tratteggi che cadono sugli assi si vedono. Senza condizion
 Livelli 7-8: foglio uniforme, numeri e tacche sugli assi solo da −3 a +3 (sopra i segni, con alone);
 ±∞ fuori dal piano, oltre le estremità degli assi, perché indicano una direzione e non un punto; una linea
 puntinata separa la fascia ±∞ dalla parte finita. Il tasto Prossimo livello compare a livello superato.
+Livelli 7-8, asintoti: le caselle del bordo non sono divise a metà. Al posto dei tratteggi verticale e
+orizzontale ci sono gli strumenti "Asintoto verticale" e "Asintoto orizzontale": si tocca un punto
+qualsiasi della colonna x = a (o della riga y = b) e compare la retta tratteggiata su tutto il piano;
+ritoccando si toglie. lim x→a(±) f = ±∞ vuole l'asintoto x = a (una coppia di laterali, una sola retta);
+lim x→±∞ f = b vuole l'asintoto y = b. Il grafico corre lungo la retta fino al bordo.
 Ogni esercizio usa la meccanica che il suo livello introduce: 2 un salto (limite e valore diversi
 nella stessa colonna), 3 un asintoto orizzontale, 4 un asintoto verticale, 5 una coppia di limiti
 laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e una condizione a x→±∞.
 Aiuto del livello: piccola finestra con le condizioni d'esempio, una scacchiera in miniatura animata
 (una freccia legge la condizione, si accendono colonna e riga, sceglie lo strumento, piazza il segno, poi arriva il
 grafico; in ciclo) e una frase. Mostra solo la novità del livello (6: un valore letto senza colori;
-7-8: un valore sul foglio con gli assi; l'8 non ha segni nuovi). Si apre da sola nel Percorso la prima volta che si arriva a un livello; in
-Allenamento mai da sola. Il tasto "? Aiuto" la richiama in entrambe le modalità. Senza movimento: scena finita, ferma.
-I livelli spiegati si ricordano.
+7: i due asintoti piazzati come rette sul foglio con gli assi; l'8 non ha segni nuovi e ripete la scena del 7).
+Nel Percorso si apre da sola quando si arriva a un livello non ancora visto dall'ultimo azzeramento (anche
+dopo il trofeo); in Allenamento mai da sola, e aprirla lì non conta come vista. Il tasto "?" la richiama in
+entrambe le modalità. Senza movimento: scena finita, ferma.
 Trofeo: superato anche l'ultimo livello (3 esercizi risolti nel Percorso) si conquista una coppa
 d'oro con ∞ inciso. Compare in una finestra dopo il grafico dell'esercizio che lo fa vincere, con
-la data; poi resta in bacheca come tasto "Trofeo ×N" (N = percorsi completati) accanto alle modalità
-e sulla pagina di partenza. Vinto il trofeo il percorso si azzera da solo e, chiusa la finestra, si
-riparte dal livello 1 (le spiegazioni già viste non si riaprono).
-"Ricomincia il percorso" (solo nel Percorso, se c'è qualcosa da azzerare) chiede conferma, riporta al
+la data; poi resta in bacheca come tasto "Trofeo ×N" (N = percorsi completati) sulla pagina di partenza.
+Vinto il trofeo il percorso si azzera da solo e, chiusa la finestra, si riparte dal livello 1.
+"Ricomincia il percorso" (pagina di partenza, se c'è qualcosa da azzerare) chiede conferma, riporta al
 livello 1, azzera gli esercizi risolti e le spiegazioni viste; i trofei restano.
 Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
 L'avanzamento resta nel browser (localStorage).
-Orientamento: in verticale scacchiera sopra e pannello sotto; in orizzontale (telefono girato, tablet, PC)
-scacchiera a sinistra alta quanto lo schermo, ferma mentre il pannello a destra scorre. Sugli schermi bassi
-pannello e finestre più fitti (nella spiegazione figura, condizione e testo su una riga).
+Tutto in uno schermo, senza scorrere, anche nell'iframe di Compasso (telefono: 360×535). La scacchiera è
+quadrata e prende lo spazio che resta: in verticale sopra il pannello, in orizzontale a sinistra (il pannello
+a destra è largo quanto avanza, da 270 a 420 px). Pannello compatto: riga dei livelli con "?" (aiuto) e
+casetta (pagina iniziale), nome del livello e avanzamento su una riga, condizioni su due colonne, strumenti,
+tasti Controlla / Soluzione / Nuovo / Prossimo, messaggio breve. Sotto i 600 px d'altezza tutto più fitto.
+Numeri della scacchiera e degli assi in grassetto, proporzionati al lato.
 È anche un laboratorio di Compasso (iframe, argomento Continuità e asintoti).
 Pagina di partenza a ogni apertura: piccola scacchiera disegnata, titolo, e due scelte, Percorso (con
 "Si comincia dal livello 1" / "Riprendi dal livello n" / "Completato") e Allenamento; sotto, il tasto Trofeo
-se conquistato. Il tutorial parte solo dopo la scelta del Percorso. Nel gioco "Pagina iniziale" ci riporta.
+se conquistato, e "Ricomincia il percorso". Il tutorial parte solo dopo la scelta del Percorso. Nel gioco la
+casetta ci riporta: è da lì che si cambia modalità.
 Due modalità: Percorso (livelli in ordine, si sbloccano) e Allenamento (qualunque livello, conta
 solo gli esercizi della visita e non tocca il percorso). La modalità scelta si ricorda.
 
