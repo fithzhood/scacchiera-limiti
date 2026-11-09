@@ -21,6 +21,7 @@
     --asse-x: #1F5FBF;
     --asse-y: #C62D2D;
     --evidenziatore: #E0A526;
+    --asintoto: #C62D2D;   /* rette degli asintoti piazzate a mano: un aiuto, non un segno */
     --pallino-fondo: #F8FAFB;
     --formula: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", serif;
   }
@@ -173,16 +174,15 @@
   body.solo-assi .tavola {
     background: linear-gradient(var(--carta-inf), var(--carta-inf)) 50% 50% / 86.54% 86.54% no-repeat;
   }
+  /* solo assi: le metà restano, ma senza la linea che le divide (al suo posto, se si vuole, l'asintoto) */
   body.solo-assi .tavola .casella.divisa::after,
   body.solo-assi .tavola .casella.divisa-o::after,
-  body.solo-assi .meta, body:not(.solo-assi) .intera { display: none; }
-  .intera { position: absolute; inset: 0; border: 0; padding: 0; background: transparent; }
-  body.solo-assi .strumento[data-tipo="verticale"], body.solo-assi .strumento[data-tipo="orizzontale"],
   body:not(.solo-assi) .strumento[data-tipo^="asintoto"] { display: none; }
-  /* asintoti piazzati: rette tratteggiate su tutto il piano */
-  .linee line { stroke: currentColor; stroke-width: 0.75; stroke-dasharray: 2.4 1.6; }
-  .linee .lampo { animation: lampo-linea 650ms ease-out; }
-  @keyframes lampo-linea { 30% { color: var(--evidenziatore); } }
+  body.solo-assi .strumenti { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+  .strumento[data-tipo^="asintoto"] { color: var(--asintoto); }
+  /* asintoti piazzati: rette rosse tratteggiate su tutto il piano, sotto i segni */
+  .sopra.linee { z-index: 1; }
+  .linee line { stroke: var(--asintoto); stroke-width: 0.6; stroke-dasharray: 2.4 1.6; }
   body.solo-assi .tavola .posto:hover { background: rgba(31, 42, 51, 0.06); }
   body.solo-assi .etichetta { visibility: hidden; }
   body:not(.solo-assi) .numeri,
@@ -700,12 +700,12 @@
     pieno:       { nome: "Pallino pieno",          svg: '<circle cx="10" cy="10" r="5" fill="currentColor"/>' },
     vuoto:       { nome: "Pallino vuoto",          svg: '<circle cx="10" cy="10" r="4.4" style="fill: var(--pallino-fondo)" stroke="currentColor" stroke-width="1.8"/>' },
     verticale:   { nome: "Tratteggio verticale",   svg: '<line x1="10" y1="1.5" x2="10" y2="18.5"/>' },
-    // livelli solo assi: al posto dei tratteggi a metà casella, la retta intera dell'asintoto
-    asintotoV:   { nome: "Asintoto verticale",     svg: '<line x1="11" y1="0.5" x2="11" y2="19.5"/><path d="M2 18.5C6.5 17.5 8.6 12 8.8 1.5" fill="none" stroke-dasharray="none" stroke-width="1.4" opacity="0.55"/>' },
     orizzontale: { nome: "Tratteggio orizzontale", svg: '<line x1="1.5" y1="10" x2="18.5" y2="10"/>' },
-    asintotoO:   { nome: "Asintoto orizzontale",   svg: '<line x1="0.5" y1="9" x2="19.5" y2="9"/><path d="M1.5 18C7 17 12 11.8 19.5 11.3" fill="none" stroke-dasharray="none" stroke-width="1.4" opacity="0.55"/>' },
     sale:        { nome: "Tratteggio in salita",   svg: '<line x1="3" y1="17" x2="17" y2="3"/>' },
     scende:      { nome: "Tratteggio in discesa",  svg: '<line x1="3" y1="3" x2="17" y2="17"/>' },
+    // livelli solo assi: la retta intera dell'asintoto, facoltativa
+    asintotoV:   { nome: "Asintoto verticale",     svg: '<line x1="11" y1="0.5" x2="11" y2="19.5"/><path d="M2 18.5C6.5 17.5 8.6 12 8.8 1.5" fill="none" stroke-dasharray="none" stroke-width="1.4" opacity="0.55"/>' },
+    asintotoO:   { nome: "Asintoto orizzontale",   svg: '<line x1="0.5" y1="9" x2="19.5" y2="9"/><path d="M1.5 18C7 17 12 11.8 19.5 11.3" fill="none" stroke-dasharray="none" stroke-width="1.4" opacity="0.55"/>' },
   };
   // taglio: "v" mezza casella sinistra/destra, "o" mezza casella sopra/sotto, "" casella intera
   function disegnoSegno(tipo, taglio = "") {
@@ -757,11 +757,6 @@
       const nome = `x ${ETICHETTE[x]}, y ${ETICHETTE[y]}`;
       if (taglio) {
         cella.classList.add(taglio === "v" ? "divisa" : "divisa-o");
-        // nei livelli solo assi la casella del bordo resta intera
-        const intera = document.createElement("button");
-        intera.className = "intera";
-        nuovoPosto(intera, `${x},${y}`, x + 0.5, nome);
-        cella.append(intera);
         for (const [lato, parola, classe, du] of META[taglio]) {
           const b = document.createElement("button");
           b.className = "meta " + classe;
@@ -791,7 +786,8 @@
     <svg class="sopra linee" id="linee" viewBox="0 0 90 90" aria-hidden="true"></svg>
     <svg class="sopra grafico" id="grafico" viewBox="0 0 90 90" aria-hidden="true"></svg>`);
   const grafico = document.getElementById("grafico");
-  // asintoti piazzati (livelli solo assi): "av,a" retta x = a, "ao,b" retta y = b
+  // asintoti piazzati (livelli solo assi, facoltativi, non contano nel controllo):
+  // "av,a" retta x = a, "ao,b" retta y = b
   {
     const linee = document.getElementById("linee");
     for (let i = 1; i < N - 1; i++) {
@@ -802,7 +798,6 @@
         g.dataset.pos = i;
         linee.append(g);
         posti[`${pre},${i}`] = g;
-        posU[`${pre},${i}`] = dir === "v" ? i + 0.5 : 0.5;
       }
     }
   }
@@ -843,9 +838,9 @@
   // ---------- strumenti ----------
   const strumentiEl = document.getElementById("strumenti");
   let strumento = "pieno";
-  // strumenti del livello: con i soli assi gli asintoti prendono il posto dei tratteggi a metà casella
-  const strumentiDi = assi => Object.keys(SEGNI).filter(t =>
-    assi ? t !== "verticale" && t !== "orizzontale" : !t.startsWith("asintoto"));
+  // strumenti del livello: con i soli assi si aggiungono le rette degli asintoti, come aiuto al disegno
+  const strumentiDi = assi => Object.keys(SEGNI).filter(t => assi || !t.startsWith("asintoto"));
+  const eAsintoto = k => k.startsWith("av,") || k.startsWith("ao,");
   function scegliStrumento(tipo) {
     strumento = tipo;
     strumentiEl.querySelectorAll(".strumento").forEach(s => s.setAttribute("aria-pressed", s.dataset.tipo === tipo));
@@ -878,12 +873,8 @@
   // Una condizione è descritta dal suo significato; testo e segni attesi si ricavano da lì.
   //   val  f(a) = y          lim  lim x→a f = y          vert lim x→a(±) f = ±∞
   //   oriz lim x→±∞ f = y    obl  lim x→±∞ f = ±∞
-  // con i soli assi (assi = true) i limiti infiniti al finito e i limiti finiti all'infinito si
-  // segnano con la retta dell'asintoto: x = a oppure y = b
-  function completa(c, assi) {
+  function completa(c) {
     const k = `${c.a},${c.y}`;
-    if (assi && c.k === "vert") return { ...c, html: `${lim(c.a, c.lato === "both" ? "" : c.lato)} = ${ny(c.y)}`, attesi: [[`av,${c.a}`, "asintotoV"]] };
-    if (assi && c.k === "oriz") return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[`ao,${c.y}`, "asintotoO"]] };
     switch (c.k) {
       case "val":  return { ...c, html: `${fDi(c.a)} = ${ny(c.y)}`, attesi: [[k, "pieno"]] };
       case "lim":  return { ...c, html: `${lim(c.a)} = ${ny(c.y)}`, attesi: [[k, "vuoto"]] };
@@ -949,7 +940,7 @@
         else cond.push({ k: "obl", a: lato, y: infinito() });
       }
     } while (cond.length < L.min || cond.length > L.max || !(L.richiede ?? []).every(r => HA[r](cond)));
-    return mescola(cond).map(c => completa(c, !!L.assi));
+    return mescola(cond).map(completa);
   }
 
   // ---------- una funzione che rispetta le condizioni ----------
@@ -965,13 +956,10 @@
     return { u, v: y + 1 - MARG - py * SC };
   }
   // estremo interno del tratteggio verticale nella metà (lato) della casella (a, Y)
-  const attaccoVerticale = (a, Y, lato, assi) => assi
-    ? { u: a + 0.5 + (lato === "s" ? -0.14 : 0.14), v: Y === PIU_INF ? 8.9 : 0.1, alto: Y === PIU_INF }
-    : { ...puntoSegno(a, Y, lato, 10, Y === PIU_INF ? 18.5 : 1.5), alto: Y === PIU_INF };
+  const attaccoVerticale = (a, Y, lato) => ({ ...puntoSegno(a, Y, lato, 10, Y === PIU_INF ? 18.5 : 1.5), alto: Y === PIU_INF });
   // estremo interno del segno a x→±∞, con la pendenza del segno
-  function attaccoBordo(lato, b, assi) {
+  function attaccoBordo(lato, b) {
     // asintoto orizzontale: la metà (sopra o sotto) si sceglie dopo, guardando da dove arriva la curva
-    if (b.h != null && assi) return { u: lato === MENO_INF ? 0.1 : 8.9, v: b.h + 0.5, m: 0, oriz: b.h, vicino: 0.14 };
     if (b.h != null) return { ...puntoSegno(lato, b.h, null, lato === MENO_INF ? 18.5 : 1.5, 10), m: 0, oriz: b.h };
     const alto = b.inf === PIU_INF;
     if (lato === MENO_INF) return alto ? { ...puntoSegno(0, 8, null, 17, 17), m: -1 } : { ...puntoSegno(0, 0, null, 17, 3), m: 1 };
@@ -994,16 +982,15 @@
       if (c.k === "obl") bordo[c.a] = { inf: c.y };
     }
     const colAsintoti = Object.keys(vert).map(Number).sort((p, q) => p - q);
-    const assi = !!LIVELLI[livello()].assi;
     const segmenti = [];
 
     for (let i = 0; i <= colAsintoti.length; i++) {
       const primo = i === 0, ultimo = i === colAsintoti.length;
       const aPrima = primo ? null : colAsintoti[i - 1], aDopo = ultimo ? null : colAsintoti[i];
-      const VS = primo ? null : attaccoVerticale(aPrima, vert[aPrima].d, "d", assi);
-      const VE = ultimo ? null : attaccoVerticale(aDopo, vert[aDopo].s, "s", assi);
+      const VS = primo ? null : attaccoVerticale(aPrima, vert[aPrima].d, "d");
+      const VE = ultimo ? null : attaccoVerticale(aDopo, vert[aDopo].s, "s");
       const bs = primo ? bordo[MENO_INF] : null, bd = ultimo ? bordo[PIU_INF] : null;
-      const inizio = bs ? attaccoBordo(MENO_INF, bs, assi) : null, fine = bd ? attaccoBordo(PIU_INF, bd, assi) : null;
+      const inizio = bs ? attaccoBordo(MENO_INF, bs) : null, fine = bd ? attaccoBordo(PIU_INF, bd) : null;
 
       const lo = VS?.u ?? inizio?.u ?? 1, hi = VE?.u ?? fine?.u ?? 8;
       let pts = Object.entries(ancore).map(([a, v]) => ({ u: +a + 0.5, v })).filter(p => p.u > lo && p.u < hi);
@@ -1027,8 +1014,7 @@
         const ordine = verso > 0 ? pts : [...pts].reverse();
         const diverso = ordine.find(p => p !== att && Math.abs(p.v - c) > 1e-9);
         const sopra = !!diverso && diverso.v > c;
-        const d = att.vicino ?? 0.25;
-        att.v = c + (sopra ? d : -d);
+        att.v = c + (sopra ? 0.25 : -0.25);
       };
       scegliMeta(inizio, +1);
       scegliMeta(fine, -1);
@@ -1131,7 +1117,7 @@
     const aloni = grafico.querySelectorAll(".alone"), tratti = grafico.querySelectorAll(".tratto");
     requestAnimationFrame(() => grafico.classList.add("visibile"));
 
-    const lampi = [...segni.keys()].map(k => ({ k, u: posU[k] })).sort((p, q) => p.u - q.u);
+    const lampi = [...segni.keys()].filter(k => !eAsintoto(k)).map(k => ({ k, u: posU[k] })).sort((p, q) => p.u - q.u);
     let prossimo = 0;
     const disegnaFino = testa => {
       segmenti.forEach((seg, i) => {
@@ -1334,7 +1320,9 @@
   const DX = x => 7 + x * 10, DY = y => 7 + (N - 1 - y) * 10;   // angolo in alto a sinistra della casella
   const GU = u => 7 + u * 10, GV = v => 7 + (9 - v) * 10;       // coordinate del grafico
   const TIPI = Object.keys(SEGNI);
-  const STR = k => [7 + k * 15.6, 106];                           // angolo dello strumento k
+  // angolo dello strumento k su n; con 8 strumenti (solo assi) sono più piccoli
+  const latoStr = n => n > 6 ? 10 : 12;
+  const STR = (k, n) => [7 + k * (n > 6 ? 80 / 7 : 15.6), 106 + (12 - latoStr(n)) / 2];
   function centro(x, y, meta) {
     let cx = DX(x) + 5, cy = DY(y) + 5;
     if (meta === "s") cx -= 2.5; else if (meta === "d") cx += 2.5;
@@ -1346,7 +1334,7 @@
     const c = classe ? ` class="${classe}"` : "";
     if (tipo === "pieno") return `<circle${c} cx="${cx}" cy="${cy}" r="2.5" fill="currentColor"/>`;
     if (tipo === "vuoto") return `<circle${c} cx="${cx}" cy="${cy}" r="2.2" style="fill: var(--pallino-fondo)" stroke="currentColor" stroke-width="0.9"/>`;
-    const tr = ` stroke="currentColor" stroke-width="0.75" stroke-dasharray="2.4 1.6"`;
+    const tr = ` stroke="var(--asintoto)" stroke-width="0.6" stroke-dasharray="2.4 1.6"`;
     if (tipo === "asintotoV") return `<line${c} x1="${cx}" y1="7" x2="${cx}" y2="97"${tr}/>`;
     if (tipo === "asintotoO") return `<line${c} x1="7" y1="${cy}" x2="97" y2="${cy}"${tr}/>`;
     const [a, b, e, f] = { verticale: [0, -4.2, 0, 4.2], orizzontale: [-4.2, 0, 4.2, 0], sale: [-3.5, 3.5, 3.5, -3.5], scende: [-3.5, -3.5, 3.5, 3.5] }[tipo];
@@ -1354,7 +1342,7 @@
   }
   // icona dello strumento nella fila sotto la scacchiera animata
   function iconaDemo(tipo, cx, cy) {
-    const tr = `stroke="currentColor" stroke-width="0.7" stroke-dasharray="1.4 0.9"`, ramo = `fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.55"`;
+    const tr = `stroke="var(--asintoto)" stroke-width="0.7" stroke-dasharray="1.4 0.9"`, ramo = `fill="none" stroke="var(--asintoto)" stroke-width="0.6" opacity="0.55"`;
     if (tipo === "asintotoV") return `<line x1="${cx + 0.6}" y1="${cy - 4.8}" x2="${cx + 0.6}" y2="${cy + 4.8}" ${tr}/><path d="M${cx - 4} ${cy + 4.2}C${cx - 1.5} ${cy + 3.6} ${cx - 0.6} ${cy + 1} ${cx - 0.5} ${cy - 4.8}" ${ramo}/>`;
     if (tipo === "asintotoO") return `<line x1="${cx - 4.8}" y1="${cy - 0.6}" x2="${cx + 4.8}" y2="${cy - 0.6}" ${tr}/><path d="M${cx - 4.6} ${cy + 4}C${cx - 1.5} ${cy + 3.5} ${cx + 1} ${cy + 0.9} ${cx + 4.8} ${cy + 0.6}" ${ramo}/>`;
     return segnoIn(tipo, cx, cy);
@@ -1395,9 +1383,11 @@
       }
     }
     s += `<g class="d-grafico"></g><g class="d-segni"></g>`;
-    strumentiDi(assi).forEach((tipo, k) => {
-      const [x, y] = STR(k);
-      s += `<g class="d-str" data-tipo="${tipo}"><rect x="${x}" y="${y}" width="12" height="12" rx="1.5"/>${iconaDemo(tipo, x + 6, y + 6)}</g>`;
+    const tipi = strumentiDi(assi), n = tipi.length, l = latoStr(n), sc = l / 12;
+    tipi.forEach((tipo, k) => {
+      const [x, y] = STR(k, n), cx = x + l / 2, cy = y + l / 2;
+      s += `<g class="d-str" data-tipo="${tipo}"><rect x="${x}" y="${y}" width="${l}" height="${l}" rx="1.5"/>`
+        + `<g transform="translate(${cx} ${cy}) scale(${sc}) translate(${-cx} ${-cy})">${iconaDemo(tipo, cx, cy)}</g></g>`;
     });
     s += `<g class="d-dito"><circle class="d-onda" r="3"/><path class="d-punta" d="M0 0V7.6L1.9 5.8L3.2 8.7L4.6 8.1L3.3 5.2H5.9Z"/></g></svg>`;
     return s;
@@ -1417,14 +1407,16 @@
   // Una scena per livello: le condizioni, la frase, i passi dell'animazione.
   //   cond k: si guarda la condizione k     colonna x / riga y: la si cerca sulla scacchiera
   //   strumento t: si sceglie il segno      tocca x y [metà]: si piazza     grafico: arriva la funzione
-  // livelli solo assi: gli asintoti si piazzano come rette, toccando la loro colonna o riga
+  // livelli solo assi: i tratteggi come prima; in più, se si vuole, la retta rossa dell'asintoto
   const SCENA_ASSI = {
     cond: [`${lim(2)} = ${ny(8)}`, `${lim(PIU_INF)} = ${ny(3)}`],
-    testo: `Limite infinito: asintoto verticale, tocca la sua colonna. Limite finito all'infinito: asintoto orizzontale, tocca la sua riga.`,
-    passi: [["cond", 0], ["colonna", 2], ["strumento", "asintotoV"], ["tocca", 2, 6],
-            ["cond", 1], ["riga", 3], ["strumento", "asintotoO"], ["tocca", 6, 3], ["grafico"]],
-    rami: [[u => 4.5 + 0.875 / (2.5 - u), 1, 2.47], [u => 3.5 + 0.9 / (u - 2.5), 2.53, 8.9]],
-    asintoti: [["v", 2.5], ["o", 3.5]], fino: [0.1, 8.9] };
+    testo: `Tratteggi nelle metà, come sulla scacchiera. Se aiuta, traccia prima l'asintoto (rosso): non conta nel controllo.`,
+    passi: [["cond", 0], ["colonna", 2], ["riga", 8], ["strumento", "asintotoV"], ["tocca", 2, 6],
+            ["strumento", "verticale"], ["tocca", 2, 8, "s"], ["tocca", 2, 8, "d"],
+            ["cond", 1], ["colonna", 8], ["riga", 3], ["strumento", "asintotoO"], ["tocca", 6, 3],
+            ["strumento", "orizzontale"], ["tocca", 8, 3, "su"], ["tocca", 8, 3, "giu"], ["grafico"]],
+    rami: [[u => 4.5 + 0.875 / (2.5 - u), 1, 2.25], [u => 3.5 + 1.25 / (u - 2.5), 2.6, 8]],
+    asintoti: [["v", 2.5], ["o", 3.5]] };
   const AIUTI = [
     { cond: [`${fDi(6)} = ${ny(3)}`],
       testo: `Valore: pallino pieno. Numero <span class="cx">blu</span>: la colonna. Numero <span class="cy">rosso</span>: la riga.`,
@@ -1503,8 +1495,8 @@
           bandaR.setAttribute("y", DY(a)); bandaR.classList.add("su"); attiva.classList.add("vedi-y");
           await attesa(900, g);
         } else if (azione === "strumento") {
-          const r = svg.querySelector(`.d-str[data-tipo="${a}"] rect`), x = +r.getAttribute("x"), y = +r.getAttribute("y");
-          vai([x + 6, y + 6]); await attesa(650, g); await tocco();
+          const r = svg.querySelector(`.d-str[data-tipo="${a}"] rect`), l = +r.getAttribute("width");
+          vai([+r.getAttribute("x") + l / 2, +r.getAttribute("y") + l / 2]); await attesa(650, g); await tocco();
           tipo = a; scegli(tipo);
           await attesa(250, g);
         } else if (azione === "tocca") {
@@ -1598,6 +1590,7 @@
     });
     let inPiu = 0;
     for (const [k, tipo] of segni) {
+      if (eAsintoto(k)) continue;   // aiuto al disegno: né giusto né sbagliato
       if (!attesi.has(k)) inPiu++;
       posti[k].classList.add(attesi.get(k) === tipo ? "giusto" : "sbagliato");
     }
@@ -1640,9 +1633,10 @@
   function mostraSoluzione() {
     const prima = new Map(segni);
     segni = attesiTutti();
-    disegnaTutto();
     Object.values(posti).forEach(b => b.classList.remove("giusto", "sbagliato"));
     for (const [k, tipo] of segni) posti[k].classList.add(prima.get(k) === tipo ? "giusto" : "soluzione");
+    for (const [k, tipo] of prima) if (eAsintoto(k)) segni.set(k, tipo);   // le rette d'aiuto restano
+    disegnaTutto();
     blocca(true);
     btnSoluzione.hidden = true;
     elMsg.className = "messaggio";

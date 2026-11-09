@@ -34,18 +34,19 @@ Assi sottili, così i tratteggi che cadono sugli assi si vedono. Senza condizion
 Livelli 7-8: foglio uniforme, numeri e tacche sugli assi solo da −3 a +3 (sopra i segni, con alone);
 ±∞ fuori dal piano, oltre le estremità degli assi, perché indicano una direzione e non un punto; una linea
 puntinata separa la fascia ±∞ dalla parte finita. Il tasto Prossimo livello compare a livello superato.
-Livelli 7-8, asintoti: le caselle del bordo non sono divise a metà. Al posto dei tratteggi verticale e
-orizzontale ci sono gli strumenti "Asintoto verticale" e "Asintoto orizzontale": si tocca un punto
-qualsiasi della colonna x = a (o della riga y = b) e compare la retta tratteggiata su tutto il piano;
-ritoccando si toglie. lim x→a(±) f = ±∞ vuole l'asintoto x = a (una coppia di laterali, una sola retta);
-lim x→±∞ f = b vuole l'asintoto y = b. Il grafico corre lungo la retta fino al bordo.
+Livelli 7-8, asintoti: i segni sono gli stessi dei livelli precedenti (tratteggi nelle metà delle caselle
+del bordo), ma le metà non sono separate da una linea. Al suo posto, se aiuta, si traccia l'asintoto: gli
+strumenti "Asintoto verticale" e "Asintoto orizzontale" (in fondo alla fila, in rosso) mettono una retta
+rossa tratteggiata su tutto il piano toccando un punto qualsiasi della colonna x = a o della riga y = b;
+ritoccando si toglie. È un aiuto al disegno: il controllo non lo guarda (né giusto né segno in più) e
+resta anche quando si mostra la soluzione.
 Ogni esercizio usa la meccanica che il suo livello introduce: 2 un salto (limite e valore diversi
 nella stessa colonna), 3 un asintoto orizzontale, 4 un asintoto verticale, 5 una coppia di limiti
 laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e una condizione a x→±∞.
 Aiuto del livello: piccola finestra con le condizioni d'esempio, una scacchiera in miniatura animata
 (una freccia legge la condizione, si accendono colonna e riga, sceglie lo strumento, piazza il segno, poi arriva il
 grafico; in ciclo) e una frase. Mostra solo la novità del livello (6: un valore letto senza colori;
-7: i due asintoti piazzati come rette sul foglio con gli assi; l'8 non ha segni nuovi e ripete la scena del 7).
+7: i tratteggi nelle metà, ciascuno preceduto dalla sua retta rossa facoltativa; l'8 non ha segni nuovi e ripete la scena del 7).
 Nel Percorso si apre da sola quando si arriva a un livello non ancora visto dall'ultimo azzeramento (anche
 dopo il trofeo); in Allenamento mai da sola, e aprirla lì non conta come vista. Il tasto "?" la richiama in
 entrambe le modalità. Senza movimento: scena finita, ferma.
