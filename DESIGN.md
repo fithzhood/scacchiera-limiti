@@ -49,6 +49,9 @@ Orientamento: in verticale scacchiera sopra e pannello sotto; in orizzontale (te
 scacchiera a sinistra alta quanto lo schermo, ferma mentre il pannello a destra scorre. Sugli schermi bassi
 pannello e finestre più fitti (nella spiegazione figura, condizione e testo su una riga).
 È anche un laboratorio di Compasso (iframe, argomento Continuità e asintoti).
+Pagina di partenza a ogni apertura: piccola scacchiera disegnata, titolo, e due scelte, Percorso (con
+"Si comincia dal livello 1" / "Riprendi dal livello n" / "Completato") e Allenamento; sotto, il tasto Trofeo
+se conquistato. Il tutorial parte solo dopo la scelta del Percorso. Nel gioco "Pagina iniziale" ci riporta.
 Due modalità: Percorso (livelli in ordine, si sbloccano) e Allenamento (qualunque livello, conta
 solo gli esercizi della visita e non tocca il percorso). La modalità scelta si ricorda.
 

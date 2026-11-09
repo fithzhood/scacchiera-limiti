@@ -352,6 +352,7 @@
     text-underline-offset: 3px;
     cursor: pointer;
   }
+  #all-inizio { margin-left: 18px; }
   .collegamento:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
 
   /* ---------- spiegazione di inizio livello ---------- */
@@ -421,6 +422,66 @@
     .strumento { max-height: 48px; }
   }
 
+  /* ---------- pagina di partenza ---------- */
+  body.in-partenza main { display: none; }
+  body:not(.in-partenza) .partenza { display: none; }
+  .partenza {
+    width: min(100vw - 32px, 520px);
+    min-height: 100vh;
+    min-height: 100svh;
+    margin: 0 auto;
+    padding: 24px 0;
+    display: grid;
+    align-content: center;
+    gap: 18px;
+  }
+  .partenza .disegno { width: min(52vw, 220px); height: auto; display: block; justify-self: center; }
+  .partenza h1 { margin: 0; font-size: 26px; font-weight: 600; text-align: center; }
+  .partenza .sotto { margin: 4px 0 0; font-size: 14px; line-height: 1.5; text-align: center; color: var(--etichetta); }
+  .scelte { display: grid; gap: 10px; }
+  .scelta {
+    display: grid;
+    gap: 4px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--etichetta);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--inchiostro);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .scelta.primario { background: var(--inchiostro); color: var(--fondo); border-color: var(--inchiostro); }
+  .scelta b { font-size: 18px; }
+  .scelta span { font-size: 13px; line-height: 1.45; opacity: 0.85; }
+  .scelta .stato { font-weight: 600; opacity: 1; }
+  .scelta:focus-visible { outline: 3px solid var(--evidenziatore); outline-offset: 2px; }
+  .partenza .segno-trofeo { justify-self: center; margin: 0; }
+  .disegno .tratto { stroke-width: 1.6; }
+  .disegno .alone { stroke-width: 3.6; }
+  /* in orizzontale: disegno a sinistra, titolo e scelte a destra */
+  @media (orientation: landscape) and (min-width: 560px) {
+    .partenza { width: min(100vw - 32px, 820px); grid-template-columns: auto minmax(0, 1fr); column-gap: 32px; align-items: center; }
+    .partenza .disegno { grid-row: 1 / span 3; width: min(100vh - 64px, 300px); width: min(100svh - 64px, 300px, 40vw); }
+    .partenza h1, .partenza .sotto { text-align: left; }
+    .partenza .segno-trofeo { justify-self: start; }
+  }
+  @media (orientation: landscape) and (max-height: 460px) {
+    .partenza { padding: 12px 0; gap: 10px; }
+    .scelta { padding: 9px 14px; gap: 2px; }
+    .scelta b { font-size: 16px; }
+    .partenza { column-gap: 20px; }
+    .partenza h1 { font-size: 22px; }
+    .partenza .sotto { font-size: 13px; line-height: 1.4; }
+    .partenza .disegno { grid-row: 1 / span 4; width: min(100svh - 40px, 34vw); }
+  }
+
+  @media (orientation: portrait) and (max-height: 700px) {
+    .partenza { padding: 14px 0; gap: 12px; }
+    .partenza .disegno { width: min(52vw, 30vh); width: min(52vw, 30svh); }
+  }
+
   /* ---------- trofeo di fine percorso ---------- */
   .coppa-oro { fill: #E0A526; }
   .coppa-scura { fill: #A8730F; }
@@ -460,7 +521,19 @@
   .segno-trofeo:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
 </style>
 </head>
-<body>
+<body class="in-partenza">
+<section class="partenza" id="partenza" aria-labelledby="pa-titolo">
+  <div class="disegno-posto" id="pa-disegno" hidden></div>
+  <div>
+    <h1 id="pa-titolo">Scacchiera ∞</h1>
+    <p class="sotto">Valori, limiti e asintoti di una funzione, segnati su una scacchiera che va da −∞&nbsp;a&nbsp;+∞.</p>
+  </div>
+  <div class="scelte">
+    <button class="scelta primario" data-scelta="percorso"><b>Percorso</b><span>Otto livelli in ordine, ognuno con la sua spiegazione.</span><span class="stato" id="pa-stato"></span></button>
+    <button class="scelta" data-scelta="allenamento"><b>Allenamento</b><span>Qualunque livello, quando vuoi. Non conta per il percorso.</span></button>
+  </div>
+  <button class="segno-trofeo" id="pa-trofeo" hidden aria-label="Trofeo del percorso"></button>
+</section>
 <main>
   <div class="tavola" id="tavola" aria-label="Scacchiera 9 per 9"></div>
 
@@ -474,6 +547,7 @@
       <div class="livelli" id="livelli" role="group" aria-labelledby="titolo-livelli"></div>
       <p class="livello-info"><span id="livello-nome"></span><br><span class="avanzamento" id="avanzamento"></span></p>
       <button class="collegamento" id="spiega">Spiegazione del livello</button>
+      <button class="collegamento" id="all-inizio">Pagina iniziale</button>
     </div>
     <div>
       <h2>Condizioni</h2>
@@ -1256,7 +1330,64 @@
   btnControlla.addEventListener("click", controlla);
   btnSoluzione.addEventListener("click", mostraSoluzione);
   document.getElementById("nuovo").addEventListener("click", nuovo);
-  nuovo();
+
+  // ---------- pagina di partenza ----------
+  // una scacchiera in piccolo: asintoto x = 1, un ramo che sale passando per un pallino vuoto,
+  // l'altro che risale da −∞ fino a un pallino pieno (coordinate in caselle, v dal basso)
+  function disegnoPartenza() {
+    const C = 10, Y = v => (90 - v * C).toFixed(2);
+    let caselle = "";
+    for (let x = 0; x < 9; x++) for (let y = 0; y < 9; y++) {
+      const inf = x === 0 || x === 8 || y === 0 || y === 8, scura = (x + y) % 2 === 0;
+      const colore = inf ? (scura ? "--ardesia-inf" : "--carta-inf") : (scura ? "--ardesia" : "--carta");
+      caselle += `<rect x="${x * C}" y="${80 - y * C}" width="${C}" height="${C}" style="fill: var(${colore})"/>`;
+    }
+    const ramo = (f, u0, u1) => {
+      const p = [];
+      for (let i = 0; i <= 120; i++) {
+        const u = u0 + (u1 - u0) * i / 120, v = f(u);
+        if (v >= 0 && v <= 9) p.push(`${(u * C).toFixed(2)},${Y(v)}`);
+      }
+      return "M" + p.join("L");
+    };
+    const rami = ramo(u => 2.5 + 6 / (5.5 - u), 0.9, 5.25) + ramo(u => 6.5 - 6 / (u - 5.5), 5.75, 8.1);
+    return `<svg class="disegno" viewBox="0 0 90 90" aria-hidden="true">${caselle}
+      <g style="stroke: var(--inchiostro-tavola); fill: var(--inchiostro-tavola)">
+        <line x1="0" y1="45" x2="87" y2="45" stroke-width="0.5"/><line x1="45" y1="90" x2="45" y2="3" stroke-width="0.5"/>
+        <polygon points="90,45 86,43.3 86,46.7" stroke="none"/><polygon points="45,0 43.3,4 46.7,4" stroke="none"/>
+        <line x1="55" y1="0" x2="55" y2="90" stroke-width="0.45" stroke-dasharray="1.6 1.2"/>
+      </g>
+      <path class="alone" d="${rami}"/><path class="tratto" d="${rami}"/>
+      <g style="stroke: var(--inchiostro-tavola)" stroke-width="1.3" stroke-dasharray="2 1">
+        <line x1="52.5" y1="1" x2="52.5" y2="9"/><line x1="57.5" y1="81" x2="57.5" y2="89"/>
+      </g>
+      <circle cx="35" cy="${Y(5.5)}" r="2.2" stroke-width="0.9" style="fill: var(--pallino-fondo); stroke: var(--inchiostro-tavola)"/>
+      <circle cx="75" cy="${Y(3.5)}" r="2.5" style="fill: var(--inchiostro-tavola)"/>
+    </svg>`;
+  }
+  document.getElementById("pa-disegno").outerHTML = disegnoPartenza();
+  const paTrofeo = document.getElementById("pa-trofeo");
+  paTrofeo.innerHTML = COPPA + "<span>Trofeo</span>";
+  paTrofeo.addEventListener("click", apriTrofeo);
+  function mostraPartenza() {
+    fermaGrafico();
+    const iniziato = prog.massimo > 0 || prog.risolti.some(n => n > 0);
+    document.getElementById("pa-stato").textContent =
+      prog.trofeo ? "Completato. Puoi rigiocare qualunque livello."
+      : iniziato ? `Riprendi dal livello ${prog.liv + 1}.`
+      : "Si comincia dal livello 1.";
+    paTrofeo.hidden = !prog.trofeo;
+    document.body.classList.add("in-partenza");
+    scrollTo(0, 0);
+  }
+  document.querySelectorAll("[data-scelta]").forEach(b => b.addEventListener("click", () => {
+    prog.modo = b.dataset.scelta; salva();
+    document.body.classList.remove("in-partenza");
+    scrollTo(0, 0);
+    nuovo();
+  }));
+  document.getElementById("all-inizio").addEventListener("click", mostraPartenza);
+  mostraPartenza();
 </script>
 </body>
 </html>
