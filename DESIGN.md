@@ -21,7 +21,7 @@ Ogni condizione si traduce in un segno su una casella:
 Esercizio: 4-6 condizioni coerenti con una funzione. Al massimo un salto (limite ≠ valore)
 o una coppia di limiti laterali per esercizio.
 
-Esercizio risolto (o soluzione mostrata): compaiono gli asintoti tratteggiati, poi il grafico di una
+Esercizio risolto (o soluzione mostrata): compaiono in rosso gli asintoti tratteggiati non ancora tracciati, poi il grafico di una
 funzione che rispetta le condizioni si disegna da sinistra a destra e ogni segno lampeggia quando
 la traccia lo raggiunge. Il grafico resta nella parte finita e si aggancia all'estremo
 interno di ogni tratteggio, con la sua direzione: il tratteggio resta visibile e continua la curva.
@@ -79,6 +79,8 @@ solo gli esercizi della visita e non tocca il percorso). La modalità scelta si 
 - Evidenziatore #E0A526 — strumento scelto, focus
 - Giusto #2F7D4F, Sbagliato #C2412D, Soluzione #B8660B — solo dopo il controllo
 - Asse x #1F5FBF (blu), Asse y #C62D2D (rosso) — indizio nei livelli 1-5
+- Asintoti #C62D2D (rosso) — rette tratteggiate, piazzate a mano nei livelli 7-8 o mostrate col grafico
+  (quelle già piazzate non si ripetono)
 - Funzione #0A6E6C — il grafico, con un alone chiaro per staccarsi dalle caselle
 
 ## Tipografia

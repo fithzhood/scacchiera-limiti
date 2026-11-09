@@ -21,7 +21,7 @@
     --asse-x: #1F5FBF;
     --asse-y: #C62D2D;
     --evidenziatore: #E0A526;
-    --asintoto: #C62D2D;   /* rette degli asintoti piazzate a mano: un aiuto, non un segno */
+    --asintoto: #C62D2D;   /* rette degli asintoti: piazzate a mano (aiuto) o mostrate col grafico */
     --pallino-fondo: #F8FAFB;
     --formula: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", serif;
   }
@@ -228,14 +228,15 @@
     z-index: 2;
     color: var(--inchiostro-tavola);
   }
+  /* asintoti del grafico: rossi come quelli piazzati a mano */
   .asintoto {
-    stroke: var(--inchiostro-tavola);
-    stroke-width: 0.5;
-    stroke-dasharray: 2 1.6;
+    stroke: var(--asintoto);
+    stroke-width: 0.6;
+    stroke-dasharray: 2.4 1.6;
     opacity: 0;
     transition: opacity 400ms;
   }
-  .grafico.visibile .asintoto { opacity: 0.75; }
+  .grafico.visibile .asintoto { opacity: 1; }
   .alone { fill: none; stroke: var(--pallino-fondo); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; opacity: 0.85; }
   .tratto { fill: none; stroke: var(--funzione); stroke-width: 1.1; stroke-linejoin: round; stroke-linecap: round; }
 
@@ -478,8 +479,8 @@
   @keyframes d-onda { from { opacity: 1; transform: scale(0.6); } to { opacity: 0; transform: scale(2.4); } }
   .d-grafico .alone, .d-grafico .tratto { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1400ms linear; }
   .d-grafico.via .alone, .d-grafico.via .tratto { stroke-dashoffset: 0; }
-  .d-asintoto { stroke: var(--inchiostro-tavola); stroke-width: 0.5; stroke-dasharray: 2 1.6; opacity: 0; transition: opacity 400ms; }
-  .d-grafico.via .d-asintoto { opacity: 0.75; }
+  .d-asintoto { stroke: var(--asintoto); stroke-width: 0.6; stroke-dasharray: 2.4 1.6; opacity: 0; transition: opacity 400ms; }
+  .d-grafico.via .d-asintoto { opacity: 1; }
   .d-segni, .d-grafico { transition: opacity 350ms; }
   .demo.svanisce .d-segni, .demo.svanisce .d-grafico { opacity: 0; }
   /* schermo basso (telefono in orizzontale): finestre più compatte */
@@ -1110,8 +1111,9 @@
     dopoGrafico = poi;
     const { segmenti, asintotiV, asintotiH } = costruisciFunzione(condizioni);
     let html = "";
-    for (const u of asintotiV) html += `<line class="asintoto" x1="${X(u)}" y1="0" x2="${X(u)}" y2="90"/>`;
-    for (const v of asintotiH) html += `<line class="asintoto" x1="0" y1="${Y(v)}" x2="90" y2="${Y(v)}"/>`;
+    // gli asintoti già tracciati a mano restano quelli: si aggiungono solo i mancanti
+    for (const u of asintotiV) if (!segni.has(`av,${u - 0.5}`)) html += `<line class="asintoto" x1="${X(u)}" y1="0" x2="${X(u)}" y2="90"/>`;
+    for (const v of asintotiH) if (!segni.has(`ao,${v - 0.5}`)) html += `<line class="asintoto" x1="0" y1="${Y(v)}" x2="90" y2="${Y(v)}"/>`;
     html += segmenti.map(() => '<path class="alone"/><path class="tratto"/>').join("");
     grafico.innerHTML = html;
     const aloni = grafico.querySelectorAll(".alone"), tratti = grafico.querySelectorAll(".tratto");
@@ -1456,8 +1458,17 @@
 
   // il grafico e gli asintoti della scena, tutti insieme
   function disegnaGraficoDemo(sc, graf) {
+    // gli asintoti che la scena ha già tracciato non si ridisegnano
+    const tracciati = new Set();
+    let tipo = "";
+    for (const [azione, a, b] of sc.passi) {
+      if (azione === "strumento") tipo = a;
+      if (azione === "tocca" && tipo === "asintotoV") tracciati.add(`v${a + 0.5}`);
+      if (azione === "tocca" && tipo === "asintotoO") tracciati.add(`o${b + 0.5}`);
+    }
     let s = "";
     for (const [dir, w] of sc.asintoti ?? []) {
+      if (tracciati.has(dir + w)) continue;
       s += dir === "v" ? `<line class="d-asintoto" x1="${GU(w)}" y1="7" x2="${GU(w)}" y2="97"/>`
                        : `<line class="d-asintoto" x1="7" y1="${GV(w)}" x2="97" y2="${GV(w)}"/>`;
     }
