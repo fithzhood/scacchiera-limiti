@@ -37,9 +37,11 @@ puntinata separa la fascia ±∞ dalla parte finita. Il tasto Prossimo livello c
 Ogni esercizio usa la meccanica che il suo livello introduce: 2 un salto (limite e valore diversi
 nella stessa colonna), 3 un asintoto orizzontale, 4 un asintoto verticale, 5 una coppia di limiti
 laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e una condizione a x→±∞.
-Spiegazione di inizio livello: nel Percorso compare la prima volta che si arriva a un livello
-(caselle d'esempio con il segno, la condizione, una frase breve per voce: dove va il segno e quale); si riapre con "Spiegazione
-del livello", anche in Allenamento. I livelli spiegati si ricordano.
+Aiuto del livello: piccola finestra con le condizioni d'esempio, una scacchiera in miniatura animata
+(una freccia legge la condizione, si accendono colonna e riga, sceglie lo strumento, piazza il segno, poi arriva il
+grafico; in ciclo) e una frase. Si apre da sola nel Percorso la prima volta che si arriva a un livello; in
+Allenamento mai da sola. Il tasto "? Aiuto" la richiama in entrambe le modalità. Senza movimento: scena finita, ferma.
+I livelli spiegati si ricordano.
 Trofeo: superato anche l'ultimo livello (3 esercizi risolti nel Percorso) si conquista una coppa
 d'oro con ∞ inciso. Compare in una finestra dopo il grafico dell'esercizio che lo fa vincere, con
 la data; poi resta come tasto "Trofeo" accanto alle modalità e la riapre.

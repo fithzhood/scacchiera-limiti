@@ -352,7 +352,36 @@
     text-underline-offset: 3px;
     cursor: pointer;
   }
-  #all-inizio { margin-left: 18px; }
+  #all-inizio { margin-left: 14px; }
+  .tasto-aiuto {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 36px;
+    margin-top: 6px;
+    padding: 0 12px 0 6px;
+    border: 1.5px solid var(--etichetta);
+    border-radius: 18px;
+    background: transparent;
+    color: var(--inchiostro);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .tasto-aiuto span {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--inchiostro);
+    color: var(--fondo);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .tasto-aiuto:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
+  .demo .confine { stroke: var(--inchiostro-tavola); stroke-width: 0.3; stroke-dasharray: 0.6 1.2; opacity: 0.5; }
+  .demo .tacca { stroke: var(--inchiostro-tavola); stroke-width: 0.32; }
   .collegamento:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
 
   /* ---------- spiegazione di inizio livello ---------- */
@@ -370,45 +399,79 @@
   .spiegazione::backdrop { background: rgba(21, 27, 33, 0.5); }
   .spiegazione .sp-numero { margin: 0; font-size: 13px; color: var(--etichetta); }
   .spiegazione .sp-titolo { margin: 2px 0 6px; font-size: 18px; font-weight: 600; color: var(--inchiostro); }
-  .voce {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 6px 16px;
-    align-items: start;
-    padding: 14px 0;
-    border-top: 1px solid rgba(127, 140, 150, 0.35);
-  }
-  .voce.solo-testo { grid-template-columns: 1fr; }
-  .voce .figure { display: flex; gap: 8px; }
-  .voce .formula { font-family: var(--formula); font-size: 19px; line-height: 1.5; align-self: center; }
-  .voce p { margin: 0; font-size: 14px; line-height: 1.5; grid-column: 1 / -1; }
-  .esempio { display: grid; justify-items: center; gap: 4px; font-size: 12px; color: var(--etichetta); }
-  .mini { width: 52px; height: 52px; display: block; }
-  .mini svg { position: absolute; inset: 8%; width: 84%; height: 84%; }
-  .piano-mini { width: 140px; height: 140px; display: block; }
-  .piano-mini text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; fill: var(--inchiostro); }
   .spiegazione .azioni { justify-content: flex-end; margin-top: 4px; }
-  /* finestra larga: il testo accanto alla figura, sotto la condizione */
-  @media (min-width: 560px) {
-    .voce .figure { grid-row: 1 / span 2; }
-    .voce p { grid-column: 2; }
-    .voce.solo-testo p { grid-column: 1; }
+  /* finestra d'aiuto: condizioni, una piccola scacchiera animata, una frase */
+  .spiegazione.aiuto { width: min(100vw - 32px, 360px); padding: 16px 18px 14px; }
+  .spiegazione.aiuto[open] {
+    display: grid;
+    grid-template-areas: "testa" "cond" "demo" "testo" "azioni";
+    gap: 10px;
   }
+  .aiuto-testa { grid-area: testa; }
+  .aiuto .sp-titolo { margin-bottom: 0; }
+  .aiuto-cond {
+    grid-area: cond;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    font-family: var(--formula);
+    font-size: 19px;
+    line-height: 1.5;
+  }
+  .aiuto-cond li { transition: opacity 300ms; }
+  .aiuto-cond.in-corso li:not(.attiva) { opacity: 0.35; }
+  .aiuto-cond li.vedi-x .cx, .aiuto-cond li.vedi-y .cy { outline: 2px solid var(--evidenziatore); outline-offset: 1px; border-radius: 2px; }
+  #aiuto-demo { grid-area: demo; }
+  .demo { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto; }
+  /* telefono basso in verticale: la scacchiera animata si stringe per lasciare posto al resto */
+  @media (orientation: portrait) { .demo { max-width: min(300px, (100vh - 370px) * 0.867); max-width: min(300px, (100svh - 370px) * 0.867); } }
+  #aiuto-testo { grid-area: testo; margin: 0; font-size: 14px; line-height: 1.5; }
+  .aiuto .azioni { grid-area: azioni; margin-top: 0; }
+  .demo text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 4.2px; fill: var(--etichetta); }
+  .demo text.inf { font-size: 5px; }
+  body.colori .demo .lx { fill: var(--asse-x); }
+  body.colori .demo .ly { fill: var(--asse-y); }
+  .demo .num text { font-size: 3.1px; fill: var(--inchiostro-tavola); stroke: var(--carta-inf); stroke-width: 0.9px; paint-order: stroke; }
+  .demo .banda { opacity: 0; transition: opacity 300ms; fill: var(--evidenziatore); fill-opacity: 0.4; }
+  .demo .banda.su { opacity: 1; }
+  body.colori .demo .banda.col { fill: #1F5FBF; fill-opacity: 0.28; }
+  body.colori .demo .banda.riga { fill: #C62D2D; fill-opacity: 0.24; }
+  .d-segni { color: var(--inchiostro-tavola); }
+  .d-segno { transform-box: fill-box; transform-origin: center; animation: d-pop 350ms cubic-bezier(0.2, 1.4, 0.4, 1); }
+  @keyframes d-pop { from { transform: scale(0.2); opacity: 0; } to { transform: none; opacity: 1; } }
+  .d-str { color: var(--inchiostro-tavola); }
+  .d-str rect { fill: var(--carta); stroke: transparent; stroke-width: 0.8; }
+  .d-str.scelto rect { fill: #F6E7BF; stroke: var(--evidenziatore); }
+  .d-dito { transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms; }
+  .d-punta { fill: #fff; stroke: #1F2A33; stroke-width: 0.55; stroke-linejoin: round; }
+  .d-onda { fill: none; stroke: var(--evidenziatore); stroke-width: 0.9; opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .d-dito { filter: drop-shadow(0 0.4px 0.6px rgba(0, 0, 0, 0.35)); }
+  .d-dito.tap .d-onda { animation: d-onda 450ms ease-out; }
+  @keyframes d-onda { from { opacity: 1; transform: scale(0.6); } to { opacity: 0; transform: scale(2.4); } }
+  .d-grafico .alone, .d-grafico .tratto { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1400ms linear; }
+  .d-grafico.via .alone, .d-grafico.via .tratto { stroke-dashoffset: 0; }
+  .d-asintoto { stroke: var(--inchiostro-tavola); stroke-width: 0.5; stroke-dasharray: 2 1.6; opacity: 0; transition: opacity 400ms; }
+  .d-grafico.via .d-asintoto { opacity: 0.75; }
+  .d-segni, .d-grafico { transition: opacity 350ms; }
+  .demo.svanisce .d-segni, .demo.svanisce .d-grafico { opacity: 0; }
   /* schermo basso (telefono in orizzontale): finestre più compatte */
   @media (max-height: 460px) {
     .spiegazione { padding: 12px 18px 10px; }
-    .voce { padding: 8px 0; }
     .trofeo svg { width: 76px; height: 76px; margin: 0 auto 4px; }
   }
-  /* basso e largo: figura, condizione e testo su una riga sola */
-  @media (max-height: 460px) and (min-width: 640px) {
-    .spiegazione:not(.trofeo) { width: min(100vw - 32px, 780px); }
-    .voce { grid-template-columns: auto auto minmax(0, 1fr); align-items: center; }
-    .voce .figure { grid-row: auto; }
-    .voce p { grid-column: 3; }
-    .voce.solo-testo p { grid-column: 1 / -1; }
-    .mini { width: 44px; height: 44px; }
-    .piano-mini { width: 110px; height: 110px; }
+  /* basso e largo: la scacchiera animata a sinistra, il resto a destra */
+  @media (max-height: 520px) and (min-width: 560px) {
+    .spiegazione.aiuto { width: min(100vw - 32px, 640px); }
+    .spiegazione.aiuto[open] {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr auto;
+      grid-template-areas: "demo testa" "demo cond" "demo testo" "demo azioni";
+      column-gap: 20px;
+    }
+    .demo { width: auto; max-width: none; height: min(100vh - 64px, 360px); height: min(100svh - 64px, 360px); }
   }
   /* telefono in orizzontale: pannello più fitto, così si scorre poco */
   @media (orientation: landscape) and (max-height: 460px) {
@@ -546,7 +609,7 @@
       <h2 id="titolo-livelli">Livello</h2>
       <div class="livelli" id="livelli" role="group" aria-labelledby="titolo-livelli"></div>
       <p class="livello-info"><span id="livello-nome"></span><br><span class="avanzamento" id="avanzamento"></span></p>
-      <button class="collegamento" id="spiega">Spiegazione del livello</button>
+      <button class="tasto-aiuto" id="spiega"><span aria-hidden="true">?</span>Aiuto</button>
       <button class="collegamento" id="all-inizio">Pagina iniziale</button>
     </div>
     <div>
@@ -566,10 +629,11 @@
     <p class="messaggio" id="messaggio" aria-live="polite"></p>
   </section>
 </main>
-<dialog class="spiegazione" id="spiegazione" aria-labelledby="sp-titolo">
-  <p class="sp-numero" id="sp-numero"></p>
-  <h2 class="sp-titolo" id="sp-titolo"></h2>
-  <div id="sp-voci"></div>
+<dialog class="spiegazione aiuto" id="spiegazione" aria-labelledby="sp-titolo">
+  <div class="aiuto-testa"><p class="sp-numero" id="sp-numero"></p><h2 class="sp-titolo" id="sp-titolo"></h2></div>
+  <ul class="aiuto-cond" id="aiuto-cond"></ul>
+  <div id="aiuto-demo"></div>
+  <p id="aiuto-testo"></p>
   <form method="dialog" class="azioni"><button class="primario" id="sp-chiudi">Inizia</button></form>
 </dialog>
 <dialog class="spiegazione trofeo" id="trofeo" aria-labelledby="tr-titolo">
@@ -1161,87 +1225,219 @@
     if (!allenamento() && !prog.spiegati.includes(prog.liv)) apriSpiegazione(true);
   }
 
-  // ---------- spiegazione di inizio livello ----------
-  // una casella d'esempio con il segno; meta: le metà da riempire (tutte se manca)
-  function esempio(tipo, x, y, meta) {
-    const t = taglioDi(x, y);
-    const classi = "casella mini" + (alFinito(x) && alFinito(y) ? "" : " inf") + (t === "v" ? " divisa" : t === "o" ? " divisa-o" : "");
-    const dentro = !t ? disegnoSegno(tipo) : META[t].map(([lato, , classe]) =>
-      `<span class="meta ${classe}">${!meta || meta.includes(lato) ? disegnoSegno(tipo, t) : ""}</span>`).join("");
-    return `<span class="esempio"><span class="${classi}">${dentro}</span><span>(${nx(x)},&nbsp;${ny(y)})</span></span>`;
+  // ---------- aiuto: una piccola scacchiera animata che mostra la meccanica del livello ----------
+  // Stesse coordinate della tavola: 104 unità, piano da 7 a 97, assi a 52; sotto, la fila degli strumenti.
+  const DX = x => 7 + x * 10, DY = y => 7 + (N - 1 - y) * 10;   // angolo in alto a sinistra della casella
+  const GU = u => 7 + u * 10, GV = v => 7 + (9 - v) * 10;       // coordinate del grafico
+  const TIPI = Object.keys(SEGNI);
+  const STR = k => [7 + k * 15.6, 106];                           // angolo dello strumento k
+  function centro(x, y, meta) {
+    let cx = DX(x) + 5, cy = DY(y) + 5;
+    if (meta === "s") cx -= 2.5; else if (meta === "d") cx += 2.5;
+    else if (meta === "su") cy -= 2.5; else if (meta === "giu") cy += 2.5;
+    return [cx, cy];
   }
-  // il piano senza scacchiera, con lim x→−2 f(x) = +∞ nella fascia in alto
-  const PIANO_MINI = `<svg class="piano-mini" viewBox="0 0 100 100" aria-hidden="true">
-      <rect x="14" y="14" width="72" height="72" style="fill: var(--carta-inf)"/>
-      <path d="M22 14V86M78 14V86M14 22H86M14 78H86" style="stroke: var(--inchiostro-tavola); stroke-width: 0.5; stroke-dasharray: 1 2; opacity: 0.55"/>
-      <line x1="34" y1="14" x2="34" y2="22" style="stroke: var(--inchiostro-tavola); stroke-width: 0.4; opacity: 0.4"/>
-      <g style="stroke: var(--inchiostro-tavola); fill: var(--inchiostro-tavola)">
-        <line x1="14" y1="50" x2="84" y2="50" stroke-width="0.8"/>
-        <line x1="50" y1="86" x2="50" y2="16" stroke-width="0.8"/>
-        <polygon points="86,50 82.5,48.4 82.5,51.6" stroke="none"/>
-        <polygon points="50,14 48.4,17.5 51.6,17.5" stroke="none"/>
-        <line x1="34" y1="48" x2="34" y2="52" stroke-width="0.8"/>
-        <path d="M32 15V21M36 15V21" stroke-width="1.6" stroke-dasharray="1.6 1.1"/>
-      </g>
-      <text x="34" y="59" font-size="7.5" text-anchor="middle" style="fill: var(--inchiostro-tavola)">−2</text>
-      <text x="94" y="53.2" font-size="9" text-anchor="middle">+∞</text>
-      <text x="6" y="53.2" font-size="9" text-anchor="middle">−∞</text>
-      <text x="50" y="10" font-size="9" text-anchor="middle">+∞</text>
-      <text x="50" y="98" font-size="9" text-anchor="middle">−∞</text>
-    </svg>`;
-  const SPIEGAZIONI = [
-    [
-      { fig: [esempio("pieno", 6, 3)], formula: `${fDi(6)} = ${ny(3)}`,
-        testo: `Valore: pallino pieno. Colonna ${nx(6)}, riga ${ny(3)}.` },
-      { testo: `Numero <span class="cx">blu</span>: la colonna. Numero <span class="cy">rosso</span>: la riga.` },
-      { testo: `Un segno per condizione, poi Controlla.` },
-    ],
-    [
-      { fig: [esempio("vuoto", 5, 6)], formula: `${lim(5)} = ${ny(6)}`,
-        testo: `Limite: pallino vuoto.` },
-      { fig: [esempio("vuoto", 2, 5), esempio("pieno", 2, 3)], formula: `${lim(2)} = ${ny(5)}<br>${fDi(2)} = ${ny(3)}`,
-        testo: `Limite e valore diversi: due segni nella stessa colonna.` },
-    ],
-    [
-      { fig: [esempio("orizzontale", 8, 5)], formula: `${lim(PIU_INF)} = ${ny(5)}`,
-        testo: `<i>x</i> → ±∞: colonna sul bordo. Tratteggio orizzontale in tutte e due le metà.` },
-    ],
-    [
-      { fig: [esempio("verticale", 2, 8)], formula: `${lim(2)} = ${ny(8)}`,
-        testo: `Limite ±∞: riga sul bordo. Tratteggio verticale in tutte e due le metà.` },
-    ],
-    [
-      { fig: [esempio("verticale", 5, 8, ["s"]), esempio("verticale", 5, 0, ["d"])],
-        formula: `${lim(5, "s")} = ${ny(8)}<br>${lim(5, "d")} = ${ny(0)}`,
-        testo: `Meno: solo la metà sinistra. Più: solo la metà destra.` },
-      { fig: [esempio("scende", 0, 8), esempio("sale", 8, 8)],
-        formula: `${lim(0)} = ${ny(8)}<br>${lim(8)} = ${ny(8)}`,
-        testo: `Infinito all'infinito: angolo. In salita se la funzione sale, in discesa se scende.` },
-    ],
-    [
-      { fig: [esempio("verticale", 6, 0)], formula: `${lim(6)} = ${ny(0)}`,
-        testo: `Niente colori. Sotto lim o dentro <i>f</i>( ): la colonna. Dopo l'uguale: la riga.` },
-    ],
-    [
-      { fig: [PIANO_MINI], formula: `${lim(2)} = ${ny(8)}`,
-        testo: `Solo gli assi. I segni vanno dove andrebbero sulla scacchiera; ±∞ oltre la linea puntinata.` },
-    ],
-    [
-      { testo: `Come il livello 7, con più condizioni.` },
-    ],
+  // un segno centrato in (cx, cy), alla scala di una casella
+  function segnoIn(tipo, cx, cy, classe = "") {
+    const c = classe ? ` class="${classe}"` : "";
+    if (tipo === "pieno") return `<circle${c} cx="${cx}" cy="${cy}" r="2.5" fill="currentColor"/>`;
+    if (tipo === "vuoto") return `<circle${c} cx="${cx}" cy="${cy}" r="2.2" style="fill: var(--pallino-fondo)" stroke="currentColor" stroke-width="0.9"/>`;
+    const [a, b, e, f] = { verticale: [0, -4.2, 0, 4.2], orizzontale: [-4.2, 0, 4.2, 0], sale: [-3.5, 3.5, 3.5, -3.5], scende: [-3.5, -3.5, 3.5, 3.5] }[tipo];
+    return `<line${c} x1="${cx + a}" y1="${cy + b}" x2="${cx + e}" y2="${cy + f}" stroke="currentColor" stroke-width="1.1" stroke-dasharray="1.5 1.1"/>`;
+  }
+  function tavolaDemo(L) {
+    const assi = !!L.assi;
+    let s = `<svg class="demo" viewBox="0 0 104 120" aria-hidden="true">`;
+    if (assi) s += `<rect x="7" y="7" width="90" height="90" style="fill: var(--carta-inf)"/>`;
+    for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) {
+      const inf = !alFinito(x) || !alFinito(y), scura = (x + y) % 2 === 0, t = taglioDi(x, y);
+      if (!assi) s += `<rect x="${DX(x)}" y="${DY(y)}" width="10" height="10" style="fill: var(${inf ? (scura ? "--ardesia-inf" : "--carta-inf") : (scura ? "--ardesia" : "--carta")})"/>`;
+      const o = assi ? 0.16 : 0.38;
+      if (t === "v") s += `<line x1="${DX(x) + 5}" y1="${DY(y)}" x2="${DX(x) + 5}" y2="${DY(y) + 10}" stroke="rgb(31,42,51)" stroke-opacity="${o}" stroke-width="0.25"/>`;
+      if (t === "o") s += `<line x1="${DX(x)}" y1="${DY(y) + 5}" x2="${DX(x) + 10}" y2="${DY(y) + 5}" stroke="rgb(31,42,51)" stroke-opacity="${o}" stroke-width="0.25"/>`;
+    }
+    s += `<rect class="banda col" x="0" y="7" width="10" height="90"/><rect class="banda riga" x="7" y="0" width="90" height="10"/>`;
+    s += `<g style="fill: var(--inchiostro-tavola); stroke: var(--inchiostro-tavola)">
+      <line x1="7" y1="52" x2="95.5" y2="52" stroke-width="0.32"/><line x1="52" y1="97" x2="52" y2="8.5" stroke-width="0.32"/>
+      <polygon points="97,52 94.6,51 94.6,53" stroke="none"/><polygon points="52,7 51,9.4 53,9.4" stroke="none"/></g>`;
+    if (assi) {
+      s += `<g class="num">`;
+      for (const c of [17, 87]) s += `<line x1="${c}" y1="7" x2="${c}" y2="97" class="confine"/><line x1="7" y1="${c}" x2="97" y2="${c}" class="confine"/>`;
+      for (let i = 1; i < N - 1; i++) {
+        if (i === 4) continue;
+        const p = DX(i) + 5, q = 104 - p;
+        s += `<line class="tacca" x1="${p}" y1="51" x2="${p}" y2="53"/><text x="${p}" y="56.6" text-anchor="middle">${ETICHETTE[i]}</text>`;
+        s += `<line class="tacca" x1="51" y1="${q}" x2="53" y2="${q}"/><text x="50" y="${q + 1.1}" text-anchor="end">${ETICHETTE[i]}</text>`;
+      }
+      s += `<text x="50" y="56.6" text-anchor="end">0</text></g>`;
+      s += `<text class="inf" x="101" y="53.6" text-anchor="middle">+∞</text><text class="inf" x="3" y="53.6" text-anchor="middle">−∞</text>
+        <text class="inf" x="52" y="5" text-anchor="middle">+∞</text><text class="inf" x="52" y="102.4" text-anchor="middle">−∞</text>`;
+    } else {
+      for (let i = 0; i < N; i++) {
+        const inf = alFinito(i) ? "" : " inf", p = DX(i) + 5, q = DY(i) + 5 + 1.5;
+        s += `<text class="lx${inf}" x="${p}" y="5" text-anchor="middle">${ETICHETTE[i]}</text>`;
+        s += `<text class="ly${inf}" x="3.5" y="${q}" text-anchor="middle">${ETICHETTE[i]}</text>`;
+        s += `<text class="ly${inf}" x="100.5" y="${q}" text-anchor="middle">${ETICHETTE[i]}</text>`;
+      }
+    }
+    s += `<g class="d-grafico"></g><g class="d-segni"></g>`;
+    TIPI.forEach((tipo, k) => {
+      const [x, y] = STR(k);
+      s += `<g class="d-str" data-tipo="${tipo}"><rect x="${x}" y="${y}" width="12" height="12" rx="1.5"/>${segnoIn(tipo, x + 6, y + 6)}</g>`;
+    });
+    s += `<g class="d-dito"><circle class="d-onda" r="3"/><path class="d-punta" d="M0 0V7.6L1.9 5.8L3.2 8.7L4.6 8.1L3.3 5.2H5.9Z"/></g></svg>`;
+    return s;
+  }
+  // i rami del grafico: funzioni v(u) campionate e tagliate alla parte finita
+  function percorso(rami) {
+    return rami.map(([f, u0, u1]) => {
+      const p = [];
+      for (let i = 0; i <= 90; i++) {
+        const u = u0 + (u1 - u0) * i / 90, v = f(u);
+        if (v >= 0.6 && v <= 8.4) p.push(`${GU(u).toFixed(2)},${GV(v).toFixed(2)}`);
+      }
+      return "M" + p.join("L");
+    });
+  }
+
+  // Una scena per livello: le condizioni, la frase, i passi dell'animazione.
+  //   cond k: si guarda la condizione k     colonna x / riga y: la si cerca sulla scacchiera
+  //   strumento t: si sceglie il segno      tocca x y [metà]: si piazza     grafico: arriva la funzione
+  const AIUTI = [
+    { cond: [`${fDi(6)} = ${ny(3)}`],
+      testo: `Valore: pallino pieno. Numero <span class="cx">blu</span>: la colonna. Numero <span class="cy">rosso</span>: la riga.`,
+      passi: [["cond", 0], ["colonna", 6], ["riga", 3], ["strumento", "pieno"], ["tocca", 6, 3], ["grafico"]],
+      rami: [[u => 3.5 + 0.35 * (u - 6.5) + 0.12 * (u - 6.5) ** 2, 1, 8]] },
+    { cond: [`${lim(2)} = ${ny(5)}`, `${fDi(2)} = ${ny(3)}`],
+      testo: `Limite: pallino vuoto. Limite e valore diversi: due segni nella stessa colonna.`,
+      passi: [["cond", 0], ["colonna", 2], ["riga", 5], ["strumento", "vuoto"], ["tocca", 2, 5],
+              ["cond", 1], ["colonna", 2], ["riga", 3], ["strumento", "pieno"], ["tocca", 2, 3], ["grafico"]],
+      rami: [[u => 5.5 + 0.5 * (u - 2.5) - 0.15 * (u - 2.5) ** 2, 1, 8]] },
+    { cond: [`${lim(PIU_INF)} = ${ny(5)}`],
+      testo: `<i>x</i> → ±∞: colonna sul bordo. Tratteggio orizzontale in tutte e due le metà.`,
+      passi: [["cond", 0], ["colonna", 8], ["riga", 5], ["strumento", "orizzontale"], ["tocca", 8, 5, "su"], ["tocca", 8, 5, "giu"], ["grafico"]],
+      rami: [[u => 5.5 + 1.419 / (u - 2.324), 2.9, 8]], asintoti: [["o", 5.5]] },
+    { cond: [`${lim(2)} = ${ny(8)}`],
+      testo: `Limite ±∞: riga sul bordo. Tratteggio verticale in tutte e due le metà.`,
+      passi: [["cond", 0], ["colonna", 2], ["riga", 8], ["strumento", "verticale"], ["tocca", 2, 8, "s"], ["tocca", 2, 8, "d"], ["grafico"]],
+      rami: [[u => 4.5 + 0.875 / (2.5 - u), 1, 2.25], [u => 4.5 + 0.875 / (u - 2.5), 2.75, 8]], asintoti: [["v", 2.5]] },
+    { cond: [`${lim(5, "s")} = ${ny(8)}`, `${lim(5, "d")} = ${ny(0)}`, `${lim(MENO_INF)} = ${ny(8)}`, `${lim(PIU_INF)} = ${ny(8)}`],
+      testo: `Meno: solo la metà sinistra. Più: solo la metà destra. Infinito all'infinito: angolo, in salita o in discesa come va la funzione.`,
+      passi: [["cond", 0], ["colonna", 5], ["riga", 8], ["strumento", "verticale"], ["tocca", 5, 8, "s"],
+              ["cond", 1], ["colonna", 5], ["riga", 0], ["tocca", 5, 0, "d"],
+              ["cond", 2], ["strumento", "scende"], ["tocca", 0, 8],
+              ["cond", 3], ["strumento", "sale"], ["tocca", 8, 8], ["grafico"]],
+      rami: [[u => 2.4 + 1.3 / (5.5 - u) + 2.6 / (u - 0.55), 1, 5.25], [u => 3 - 0.5 / (u - 5.5) + 0.83 * (u - 5.5) ** 2, 5.75, 8]], asintoti: [["v", 5.5]] },
+    { cond: [`${lim(6)} = ${ny(0)}`],
+      testo: `Niente colori. Sotto lim o dentro <i>f</i>( ): la colonna. Dopo l'uguale: la riga.`,
+      passi: [["cond", 0], ["colonna", 6], ["riga", 0], ["strumento", "verticale"], ["tocca", 6, 0, "s"], ["tocca", 6, 0, "d"], ["grafico"]],
+      rami: [[u => 4.5 - 0.875 / (6.5 - u), 1, 6.25], [u => 4.5 - 0.875 / (u - 6.5), 6.75, 8]], asintoti: [["v", 6.5]] },
+    { cond: [`${lim(2)} = ${ny(8)}`],
+      testo: `Solo gli assi. I segni vanno dove andrebbero sulla scacchiera; ±∞ oltre la linea puntinata.`,
+      passi: [["cond", 0], ["colonna", 2], ["riga", 8], ["strumento", "verticale"], ["tocca", 2, 8, "s"], ["tocca", 2, 8, "d"], ["grafico"]],
+      rami: [[u => 4.5 + 0.875 / (2.5 - u), 1, 2.25], [u => 4.5 + 0.875 / (u - 2.5), 2.75, 8]], asintoti: [["v", 2.5]] },
+    { cond: [`${lim(PIU_INF)} = ${ny(3)}`],
+      testo: `Come il livello 7, con più condizioni.`,
+      passi: [["cond", 0], ["colonna", 8], ["riga", 3], ["strumento", "orizzontale"], ["tocca", 8, 3, "su"], ["tocca", 8, 3, "giu"], ["grafico"]],
+      rami: [[u => 3.5 - 1.419 / (u - 2.324), 2.9, 8]], asintoti: [["o", 3.5]] },
   ];
+
   const dlg = document.getElementById("spiegazione");
+  let giroAiuto = 0;   // cambia a ogni apertura e chiusura: ferma l'animazione precedente
+  const FERMO = {};
+  const attesa = (ms, g) => new Promise(r => setTimeout(r, ms)).then(() => { if (g !== giroAiuto) throw FERMO; });
+
+  // il grafico e gli asintoti della scena, tutti insieme
+  function disegnaGraficoDemo(sc, graf) {
+    let s = "";
+    for (const [dir, w] of sc.asintoti ?? []) {
+      s += dir === "v" ? `<line class="d-asintoto" x1="${GU(w)}" y1="7" x2="${GU(w)}" y2="97"/>`
+                       : `<line class="d-asintoto" x1="7" y1="${GV(w)}" x2="97" y2="${GV(w)}"/>`;
+    }
+    for (const d of percorso(sc.rami)) s += `<path class="alone" pathLength="1" d="${d}"/><path class="tratto" pathLength="1" d="${d}"/>`;
+    graf.innerHTML = s;
+  }
+
+  async function animaAiuto(sc, g) {
+    const svg = document.querySelector("#aiuto-demo svg");
+    const dito = svg.querySelector(".d-dito"), segniG = svg.querySelector(".d-segni"), graf = svg.querySelector(".d-grafico");
+    const bandaC = svg.querySelector(".banda.col"), bandaR = svg.querySelector(".banda.riga");
+    const elenco = document.getElementById("aiuto-cond"), voci = [...elenco.children];
+    const strumenti = [...svg.querySelectorAll(".d-str")];
+    const RIPOSO = [92, 101];
+    const vai = ([x, y]) => { dito.style.transform = `translate(${x}px, ${y}px)`; };
+    const tocco = async () => { dito.classList.remove("tap"); void dito.getBBox(); dito.classList.add("tap"); await attesa(260, g); };
+    const scegli = t => strumenti.forEach(e => e.classList.toggle("scelto", e.dataset.tipo === t));
+    const spegniBande = () => { bandaC.classList.remove("su"); bandaR.classList.remove("su"); voci.forEach(v => v.classList.remove("vedi-x", "vedi-y")); };
+    let attiva = voci[0], tipo;
+    for (;;) {
+      segniG.innerHTML = ""; graf.innerHTML = ""; graf.classList.remove("via");
+      spegniBande(); tipo = "pieno"; scegli(tipo);
+      dito.style.transition = "none"; vai(RIPOSO); dito.style.opacity = 1; void dito.getBBox(); dito.style.transition = "";
+      elenco.classList.add("in-corso");
+      await attesa(600, g);
+      for (const [azione, a, b, c] of sc.passi) {
+        if (azione === "cond") {
+          spegniBande(); attiva = voci[a];
+          voci.forEach(v => v.classList.toggle("attiva", v === attiva));
+          await attesa(700, g);
+        } else if (azione === "colonna") {
+          bandaC.setAttribute("x", DX(a)); bandaC.classList.add("su"); attiva.classList.add("vedi-x");
+          await attesa(800, g);
+        } else if (azione === "riga") {
+          bandaR.setAttribute("y", DY(a)); bandaR.classList.add("su"); attiva.classList.add("vedi-y");
+          await attesa(900, g);
+        } else if (azione === "strumento") {
+          const [x, y] = STR(TIPI.indexOf(a));
+          vai([x + 6, y + 6]); await attesa(650, g); await tocco();
+          tipo = a; scegli(tipo);
+          await attesa(250, g);
+        } else if (azione === "tocca") {
+          const [cx, cy] = centro(a, b, c);
+          vai([cx, cy]); await attesa(650, g); await tocco();
+          segniG.insertAdjacentHTML("beforeend", segnoIn(tipo, cx, cy, "d-segno"));
+          await attesa(450, g);
+          spegniBande();
+        } else if (azione === "grafico") {
+          spegniBande(); elenco.classList.remove("in-corso");
+          vai(RIPOSO); dito.style.opacity = 0;
+          disegnaGraficoDemo(sc, graf); void graf.getBBox(); graf.classList.add("via");
+          await attesa(2800, g);
+        }
+      }
+      svg.classList.add("svanisce"); await attesa(400, g); svg.classList.remove("svanisce");
+    }
+  }
+  // senza movimento: la scena già finita, ferma
+  function aiutoFermo(sc) {
+    const svg = document.querySelector("#aiuto-demo svg");
+    let tipo = "pieno", s = "";
+    for (const [azione, a, b, c] of sc.passi) {
+      if (azione === "strumento") tipo = a;
+      if (azione === "tocca") { const [cx, cy] = centro(a, b, c); s += segnoIn(tipo, cx, cy); }
+    }
+    svg.querySelector(".d-segni").innerHTML = s;
+    svg.querySelector(".d-dito").style.display = "none";
+    const graf = svg.querySelector(".d-grafico");
+    disegnaGraficoDemo(sc, graf); graf.classList.add("via");
+  }
+
   function apriSpiegazione(prima) {
-    const i = livello();
+    const i = livello(), sc = AIUTI[i];
     document.getElementById("sp-numero").textContent = `Livello ${i + 1}`;
     document.getElementById("sp-titolo").textContent = LIVELLI[i].nome;
-    document.getElementById("sp-voci").innerHTML = SPIEGAZIONI[i].map(v => v.fig || v.formula
-      ? `<div class="voce"><div class="figure">${(v.fig || []).join("")}</div>${v.formula ? `<div class="formula">${v.formula}</div>` : ""}<p>${v.testo}</p></div>`
-      : `<div class="voce solo-testo"><p>${v.testo}</p></div>`).join("");
+    document.getElementById("aiuto-cond").innerHTML = sc.cond.map(c => `<li>${c}</li>`).join("");
+    document.getElementById("aiuto-demo").innerHTML = tavolaDemo(LIVELLI[i]);
+    document.getElementById("aiuto-testo").innerHTML = sc.testo;
     document.getElementById("sp-chiudi").textContent = prima ? "Inizia" : "Torna all'esercizio";
     if (!prog.spiegati.includes(i)) { prog.spiegati.push(i); salva(); }
     if (!dlg.open) dlg.showModal();
+    const g = ++giroAiuto;
+    if (riduciMoto) aiutoFermo(sc);
+    else animaAiuto(sc, g).catch(e => { if (e !== FERMO) throw e; });
   }
+  // l'evento arriva dopo: se nel frattempo la finestra si è riaperta, l'animazione nuova resta
+  dlg.addEventListener("close", () => { if (!dlg.open) giroAiuto++; });
   document.getElementById("spiega").addEventListener("click", () => apriSpiegazione(false));
 
   function pulisciEsito() {
