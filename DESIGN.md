@@ -45,7 +45,11 @@ Allenamento mai da sola. Il tasto "? Aiuto" la richiama in entrambe le modalità
 I livelli spiegati si ricordano.
 Trofeo: superato anche l'ultimo livello (3 esercizi risolti nel Percorso) si conquista una coppa
 d'oro con ∞ inciso. Compare in una finestra dopo il grafico dell'esercizio che lo fa vincere, con
-la data; poi resta come tasto "Trofeo" accanto alle modalità e la riapre.
+la data; poi resta in bacheca come tasto "Trofeo ×N" (N = percorsi completati) accanto alle modalità
+e sulla pagina di partenza. Vinto il trofeo il percorso si azzera da solo e, chiusa la finestra, si
+riparte dal livello 1 (le spiegazioni già viste non si riaprono).
+"Ricomincia il percorso" (solo nel Percorso, se c'è qualcosa da azzerare) chiede conferma, riporta al
+livello 1, azzera gli esercizi risolti e le spiegazioni viste; i trofei restano.
 Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
 L'avanzamento resta nel browser (localStorage).
 Orientamento: in verticale scacchiera sopra e pannello sotto; in orizzontale (telefono girato, tablet, PC)

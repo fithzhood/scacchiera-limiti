@@ -353,6 +353,11 @@
     cursor: pointer;
   }
   #all-inizio { margin-left: 14px; }
+  #ricomincia { display: block; padding-left: 0; }
+  #ricomincia[hidden] { display: none; }
+  .spiegazione.conferma { width: min(100vw - 32px, 380px); }
+  .conferma p { margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
+  .conferma .azioni { gap: 8px; }
   .tasto-aiuto {
     display: inline-flex;
     align-items: center;
@@ -562,6 +567,7 @@
   @media (prefers-reduced-motion: reduce) { .trofeo.aperto svg { animation: none; } }
   .trofeo p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; }
   .trofeo .data { color: var(--etichetta); font-size: 13px; }
+  .trofeo .da-capo[hidden] { display: none; }
   .trofeo .azioni { justify-content: center; margin-top: 14px; }
   .segno-trofeo {
     display: inline-flex;
@@ -581,6 +587,7 @@
   }
   .segno-trofeo[hidden] { display: none; }
   .segno-trofeo svg { width: 26px; height: 26px; }
+  .segno-trofeo .quanti { font-family: var(--formula); font-size: 16px; font-weight: 600; }
   .segno-trofeo:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
 </style>
 </head>
@@ -611,6 +618,7 @@
       <p class="livello-info"><span id="livello-nome"></span><br><span class="avanzamento" id="avanzamento"></span></p>
       <button class="tasto-aiuto" id="spiega"><span aria-hidden="true">?</span>Aiuto</button>
       <button class="collegamento" id="all-inizio">Pagina iniziale</button>
+      <button class="collegamento" id="ricomincia" hidden>Ricomincia il percorso</button>
     </div>
     <div>
       <h2>Condizioni</h2>
@@ -641,7 +649,13 @@
   <h2 class="sp-titolo" id="tr-titolo">Percorso completato</h2>
   <p>Hai superato tutti gli otto livelli: dai valori della funzione agli asintoti, fino ai limiti letti sugli assi senza scacchiera.</p>
   <p class="data" id="tr-data"></p>
+  <p class="da-capo" id="tr-da-capo" hidden>Il trofeo resta in bacheca; il percorso ricomincia dal livello 1.</p>
   <form method="dialog" class="azioni"><button class="primario">Chiudi</button></form>
+</dialog>
+<dialog class="spiegazione conferma" id="conferma" aria-labelledby="co-titolo">
+  <h2 class="sp-titolo" id="co-titolo">Ricominciare il percorso?</h2>
+  <p>Si riparte dal livello 1 e gli esercizi risolti tornano a zero. I trofei restano in bacheca.</p>
+  <form method="dialog" class="azioni"><button value="no">Annulla</button><button class="primario" value="si">Ricomincia</button></form>
 </dialog>
 <script>
   // Indici 0..8 sulla scacchiera: 0 = −∞, 1..7 = −3..+3, 8 = +∞.
@@ -1127,10 +1141,20 @@
   prog.risolti = LIVELLI.map((_, i) => prog.risolti[i] | 0);
   // livelli di cui si è già vista la spiegazione
   prog.spiegati = Array.isArray(prog.spiegati) ? prog.spiegati.filter(Number.isInteger) : [];
-  // trofeo: data (AAAA-MM-GG) in cui si è finito il percorso, cioè superato anche l'ultimo livello
+  // trofei: le date (AAAA-MM-GG) in cui si è finito il percorso, cioè superato anche l'ultimo livello.
+  // Finito il percorso si ricomincia dal livello 1: i trofei restano.
   const oggi = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
-  if (typeof prog.trofeo !== "string") prog.trofeo = null;
-  if (!prog.trofeo && prog.risolti[LIVELLI.length - 1] >= PER_LIVELLO) prog.trofeo = oggi();
+  prog.trofei = Array.isArray(prog.trofei) ? prog.trofei.filter(s => typeof s === "string") : [];
+  if (typeof prog.trofeo === "string" && !prog.trofei.length) prog.trofei.push(prog.trofeo); // salvataggi di prima
+  delete prog.trofeo;
+  function azzeraPercorso() {
+    prog.liv = 0; prog.massimo = 0;
+    prog.risolti = LIVELLI.map(() => 0);
+  }
+  if (prog.risolti[LIVELLI.length - 1] >= PER_LIVELLO) {
+    if (!prog.trofei.length) prog.trofei.push(oggi());
+    azzeraPercorso();
+  }
   let risoltiAllenamento = 0; // solo per questa visita
   const salva = () => { try { localStorage.setItem(CHIAVE, JSON.stringify(prog)); } catch {} };
   const allenamento = () => prog.modo === "allenamento";
@@ -1173,11 +1197,11 @@
     const n = prog.risolti[prog.liv];
     document.getElementById("avanzamento").textContent =
       allenamento() ? `Allenamento, non conta per il percorso. Esercizi risolti: ${risoltiAllenamento}`
-      : ultimoLivello() && prog.trofeo ? `Percorso completato, esercizi risolti: ${n}`
       : superato() ? `Livello superato, esercizi risolti: ${n}`
       : `Esercizi risolti: ${n} di ${PER_LIVELLO}`;
     btnProssimo.hidden = !superato();
-    document.getElementById("segno-trofeo").hidden = !prog.trofeo;
+    mostraBacheca();
+    document.getElementById("ricomincia").hidden = allenamento() || !iniziato();
   }
 
   // ---------- trofeo ----------
@@ -1192,18 +1216,45 @@
     </svg>`;
   document.getElementById("tr-coppa").innerHTML = COPPA;
   const segnoTrofeo = document.getElementById("segno-trofeo");
-  segnoTrofeo.innerHTML = COPPA + "<span>Trofeo</span>";
   const dlgTrofeo = document.getElementById("trofeo");
+  // bacheca: la coppa con ×N, quante volte si è finito il percorso
+  function mostraBacheca() {
+    const n = prog.trofei.length;
+    for (const b of [segnoTrofeo, document.getElementById("pa-trofeo")]) {
+      b.hidden = !n;
+      b.innerHTML = COPPA + `<span>Trofeo</span><span class="quanti">×${n}</span>`;
+      b.setAttribute("aria-label", n === 1 ? "Trofeo del percorso, conquistato una volta" : `Trofeo del percorso, conquistato ${n} volte`);
+    }
+  }
+  const inData = s => { const [a, m, g] = s.split("-").map(Number); return new Date(a, m - 1, g).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }); };
+  let trofeoAppenaVinto = false;
   function apriTrofeo() {
-    const [a, m, g] = prog.trofeo.split("-").map(Number);
+    const n = prog.trofei.length, ultima = inData(prog.trofei[n - 1]);
     document.getElementById("tr-data").textContent =
-      "Conquistato il " + new Date(a, m - 1, g).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+      n === 1 ? "Conquistato il " + ultima : `Percorso completato ${n} volte, l'ultima il ${ultima}.`;
+    document.getElementById("tr-da-capo").hidden = !trofeoAppenaVinto;
     dlgTrofeo.classList.remove("aperto");
     if (!dlgTrofeo.open) dlgTrofeo.showModal();
     void dlgTrofeo.offsetWidth; // riavvia l'arrivo della coppa
     dlgTrofeo.classList.add("aperto");
   }
   segnoTrofeo.addEventListener("click", apriTrofeo);
+  // chiuso il trofeo appena vinto, si riparte dal livello 1
+  dlgTrofeo.addEventListener("close", () => {
+    if (!trofeoAppenaVinto || dlgTrofeo.open) return;
+    trofeoAppenaVinto = false;
+    if (!document.body.classList.contains("in-partenza")) nuovo();
+  });
+
+  const iniziato = () => prog.massimo > 0 || prog.risolti.some(n => n > 0);
+  const dlgConferma = document.getElementById("conferma");
+  document.getElementById("ricomincia").addEventListener("click", () => { dlgConferma.returnValue = ""; dlgConferma.showModal(); });
+  dlgConferma.addEventListener("close", () => {
+    if (dlgConferma.returnValue !== "si") return;
+    azzeraPercorso();
+    prog.spiegati = [];   // da capo davvero: le spiegazioni tornano a comparire
+    salva(); nuovo();
+  });
 
   btnProssimo.addEventListener("click", () => {
     prog.liv++;
@@ -1214,6 +1265,7 @@
 
   function nuovo() {
     fermaGrafico();
+    trofeoAppenaVinto = false;
     mostraLivello();
     condizioni = genera(LIVELLI[livello()]);
     segni.clear();
@@ -1486,13 +1538,20 @@
         prog.risolti[prog.liv]++;
         appenaSuperato = prog.risolti[prog.liv] === PER_LIVELLO && !ultimoLivello();
         if (appenaSuperato) prog.massimo = Math.max(prog.massimo, prog.liv + 1);
-        if (ultimoLivello() && !prog.trofeo && prog.risolti[prog.liv] >= PER_LIVELLO) {
-          appenaFinito = true;
-          prog.trofeo = oggi();
-        }
-        salva();
+        if (ultimoLivello() && prog.risolti[prog.liv] >= PER_LIVELLO) appenaFinito = true;
+        if (!appenaFinito) salva();
       }
       mostraLivello();
+      if (appenaFinito) {
+        // il trofeo va in bacheca e il percorso si azzera subito, così resta anche se si chiude la pagina
+        prog.trofei.push(oggi());
+        azzeraPercorso();
+        salva();
+        trofeoAppenaVinto = true;
+        mostraBacheca();
+        document.getElementById("ricomincia").hidden = true;
+        document.getElementById("avanzamento").textContent = "Percorso completato. Si ricomincia dal livello 1.";
+      }
       elMsg.className = "messaggio risolto";
       elMsg.textContent = appenaFinito ? "Esercizio risolto. Percorso completato."
         : appenaSuperato ? `Esercizio risolto. Livello ${prog.liv + 1} superato.` : "Esercizio risolto";
@@ -1524,7 +1583,7 @@
 
   btnControlla.addEventListener("click", controlla);
   btnSoluzione.addEventListener("click", mostraSoluzione);
-  document.getElementById("nuovo").addEventListener("click", nuovo);
+  document.getElementById("nuovo").addEventListener("click", () => trofeoAppenaVinto ? apriTrofeo() : nuovo());
 
   // ---------- pagina di partenza ----------
   // una scacchiera in piccolo: asintoto x = 1, un ramo che sale passando per un pallino vuoto,
@@ -1561,17 +1620,14 @@
     </svg>`;
   }
   document.getElementById("pa-disegno").outerHTML = disegnoPartenza();
-  const paTrofeo = document.getElementById("pa-trofeo");
-  paTrofeo.innerHTML = COPPA + "<span>Trofeo</span>";
-  paTrofeo.addEventListener("click", apriTrofeo);
+  document.getElementById("pa-trofeo").addEventListener("click", apriTrofeo);
   function mostraPartenza() {
     fermaGrafico();
-    const iniziato = prog.massimo > 0 || prog.risolti.some(n => n > 0);
     document.getElementById("pa-stato").textContent =
-      prog.trofeo ? "Completato. Puoi rigiocare qualunque livello."
-      : iniziato ? `Riprendi dal livello ${prog.liv + 1}.`
+      iniziato() ? `Riprendi dal livello ${prog.liv + 1}.`
+      : prog.trofei.length ? "Si ricomincia dal livello 1."
       : "Si comincia dal livello 1.";
-    paTrofeo.hidden = !prog.trofeo;
+    mostraBacheca();
     document.body.classList.add("in-partenza");
     scrollTo(0, 0);
   }
