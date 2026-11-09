@@ -52,12 +52,20 @@
     display: grid;
     gap: 20px;
   }
-  @media (min-width: 900px) {
+  /* in orizzontale (telefono girato, tablet, PC) scacchiera a sinistra, alta quanto lo schermo,
+     e pannello a destra; la scacchiera resta ferma mentre il pannello scorre */
+  @media (orientation: landscape) and (min-width: 560px) {
     main {
-      width: min(100vw - 48px, 940px);
-      grid-template-columns: minmax(0, 560px) 340px;
+      width: min(100vw - 32px, 960px);
+      grid-template-columns: auto minmax(0, 1fr);
       align-items: start;
-      margin-top: 40px;
+      margin: clamp(12px, 4vh, 40px) auto;
+    }
+    main > .tavola {
+      width: min(100vh - 24px, 560px, 56vw);
+      width: min(100svh - 24px, 560px, 56vw);
+      position: sticky;
+      top: 12px;
     }
   }
 
@@ -350,6 +358,7 @@
   .spiegazione {
     width: min(100vw - 32px, 520px);
     max-height: calc(100vh - 32px);
+    max-height: calc(100svh - 32px);
     border: 0;
     border-radius: 8px;
     padding: 20px 20px 16px;
@@ -378,6 +387,39 @@
   .piano-mini { width: 140px; height: 140px; display: block; }
   .piano-mini text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; fill: var(--inchiostro); }
   .spiegazione .azioni { justify-content: flex-end; margin-top: 4px; }
+  /* finestra larga: il testo accanto alla figura, sotto la condizione */
+  @media (min-width: 560px) {
+    .voce .figure { grid-row: 1 / span 2; }
+    .voce p { grid-column: 2; }
+    .voce.solo-testo p { grid-column: 1; }
+  }
+  /* schermo basso (telefono in orizzontale): finestre più compatte */
+  @media (max-height: 460px) {
+    .spiegazione { padding: 12px 18px 10px; }
+    .voce { padding: 8px 0; }
+    .trofeo svg { width: 76px; height: 76px; margin: 0 auto 4px; }
+  }
+  /* basso e largo: figura, condizione e testo su una riga sola */
+  @media (max-height: 460px) and (min-width: 640px) {
+    .spiegazione:not(.trofeo) { width: min(100vw - 32px, 780px); }
+    .voce { grid-template-columns: auto auto minmax(0, 1fr); align-items: center; }
+    .voce .figure { grid-row: auto; }
+    .voce p { grid-column: 3; }
+    .voce.solo-testo p { grid-column: 1 / -1; }
+    .mini { width: 44px; height: 44px; }
+    .piano-mini { width: 110px; height: 110px; }
+  }
+  /* telefono in orizzontale: pannello più fitto, così si scorre poco */
+  @media (orientation: landscape) and (max-height: 460px) {
+    main { gap: 16px; }
+    .pannello { gap: 12px; }
+    .modi { margin-bottom: 8px; }
+    .livelli button { height: 36px; }
+    .livello-info { margin-top: 4px; }
+    .condizioni { gap: 2px; }
+    .condizioni li { min-height: 34px; font-size: 19px; }
+    .strumento { max-height: 48px; }
+  }
 
   /* ---------- trofeo di fine percorso ---------- */
   .coppa-oro { fill: #E0A526; }
@@ -1076,47 +1118,42 @@
   const SPIEGAZIONI = [
     [
       { fig: [esempio("pieno", 6, 3)], formula: `${fDi(6)} = ${ny(3)}`,
-        testo: `Il grafico passa per il punto (${nx(6)}, ${ny(3)}). Scegli il pallino pieno e tocca la casella nella colonna ${nx(6)} e nella riga ${ny(3)}.` },
-      { testo: `I numeri in blu sono valori di <i>x</i> e indicano la colonna; quelli in rosso sono valori di <i>y</i> e indicano la riga.` },
-      { testo: `Piazza un segno per ogni condizione e premi Controlla. Per togliere un segno, toccalo di nuovo con lo stesso strumento.` },
+        testo: `Valore: pallino pieno. Colonna ${nx(6)}, riga ${ny(3)}.` },
+      { testo: `Numero <span class="cx">blu</span>: la colonna. Numero <span class="cy">rosso</span>: la riga.` },
+      { testo: `Un segno per condizione, poi Controlla.` },
     ],
     [
       { fig: [esempio("vuoto", 5, 6)], formula: `${lim(5)} = ${ny(6)}`,
-        testo: `Il limite dice a quale punto si avvicina il grafico quando <i>x</i> si avvicina a ${nx(5)}, non quanto vale <i>f</i>(${nx(5)}). Si segna con il pallino vuoto.` },
+        testo: `Limite: pallino vuoto.` },
       { fig: [esempio("vuoto", 2, 5), esempio("pieno", 2, 3)], formula: `${lim(2)} = ${ny(5)}<br>${fDi(2)} = ${ny(3)}`,
-        testo: `Limite e valore diversi nella stessa colonna: servono due segni. Il grafico arriva al pallino vuoto e salta sul pallino pieno. In ogni esercizio di questo livello c'è un salto così.` },
+        testo: `Limite e valore diversi: due segni nella stessa colonna.` },
     ],
     [
       { fig: [esempio("orizzontale", 8, 5)], formula: `${lim(PIU_INF)} = ${ny(5)}`,
-        testo: `Asintoto orizzontale. La casella nella colonna ${nx(8)} e nella riga ${ny(5)} è divisa dalla retta <i>y</i> = ${ny(5)}: metti il tratteggio orizzontale sopra e sotto la linea. Il grafico userà quello dalla parte da cui arriva.` },
-      { testo: `Con <i>x</i> → ${nx(0)} si usa la colonna di sinistra. In ogni esercizio di questo livello c'è almeno un asintoto orizzontale.` },
+        testo: `<i>x</i> → ±∞: colonna sul bordo. Tratteggio orizzontale in tutte e due le metà.` },
     ],
     [
       { fig: [esempio("verticale", 2, 8)], formula: `${lim(2)} = ${ny(8)}`,
-        testo: `Asintoto verticale. La casella nella colonna ${nx(2)} e nella riga ${ny(8)} è divisa dalla retta <i>x</i> = ${nx(2)}: metti il tratteggio verticale in tutte e due le metà, perché il grafico sale da entrambi i lati.` },
-      { testo: `Se il limite è ${ny(0)} si usa la riga in basso. In ogni esercizio di questo livello c'è almeno un asintoto verticale.` },
+        testo: `Limite ±∞: riga sul bordo. Tratteggio verticale in tutte e due le metà.` },
     ],
     [
       { fig: [esempio("verticale", 5, 8, ["s"]), esempio("verticale", 5, 0, ["d"])],
         formula: `${lim(5, "s")} = ${ny(8)}<br>${lim(5, "d")} = ${ny(0)}`,
-        testo: `Il meno in alto vuol dire da sinistra, il più da destra. Il tratteggio va solo nella metà della casella da quella parte della retta <i>x</i> = ${nx(5)}.` },
+        testo: `Meno: solo la metà sinistra. Più: solo la metà destra.` },
       { fig: [esempio("scende", 0, 8), esempio("sale", 8, 8)],
         formula: `${lim(0)} = ${ny(8)}<br>${lim(8)} = ${ny(8)}`,
-        testo: `Limiti infiniti all'infinito: il segno va nell'angolo. Leggi il grafico da sinistra a destra: tratteggio in discesa se la funzione scende, in salita se sale.` },
-      { testo: `In ogni esercizio di questo livello ci sono una coppia di limiti laterali e un limite infinito all'infinito.` },
+        testo: `Infinito all'infinito: angolo. In salita se la funzione sale, in discesa se scende.` },
     ],
     [
       { fig: [esempio("verticale", 6, 0)], formula: `${lim(6)} = ${ny(0)}`,
-        testo: `Da qui i numeri hanno tutti lo stesso colore. Il numero sotto lim o dentro <i>f</i>( ) è la <i>x</i> e dà la colonna; quello dopo l'uguale è la <i>y</i> e dà la riga.` },
-      { testo: `Ogni esercizio può contenere tutti i segni visti finora, con almeno un asintoto verticale e almeno una condizione con <i>x</i> → ±∞.` },
+        testo: `Niente colori. Sotto lim o dentro <i>f</i>( ): la colonna. Dopo l'uguale: la riga.` },
     ],
     [
       { fig: [PIANO_MINI], formula: `${lim(2)} = ${ny(8)}`,
-        testo: `La scacchiera sparisce: restano gli assi con i numeri da −3 a +3. Ogni segno va dove andrebbe sulla scacchiera, all'incrocio fra la <i>x</i> e la <i>y</i>.` },
-      { testo: `−∞ e +∞ non sono punti degli assi: stanno oltre la loro fine e indicano una direzione. Le condizioni con ∞ vanno nella fascia lungo il bordo, oltre la linea puntinata.` },
+        testo: `Solo gli assi. I segni vanno dove andrebbero sulla scacchiera; ±∞ oltre la linea puntinata.` },
     ],
     [
-      { testo: `Come il livello 7, ma con esercizi più lunghi: cinque o sei condizioni, sempre con almeno un asintoto verticale e una condizione con <i>x</i> → ±∞.` },
+      { testo: `Come il livello 7, con più condizioni.` },
     ],
   ];
   const dlg = document.getElementById("spiegazione");

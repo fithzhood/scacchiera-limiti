@@ -38,13 +38,17 @@ Ogni esercizio usa la meccanica che il suo livello introduce: 2 un salto (limite
 nella stessa colonna), 3 un asintoto orizzontale, 4 un asintoto verticale, 5 una coppia di limiti
 laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e una condizione a x→±∞.
 Spiegazione di inizio livello: nel Percorso compare la prima volta che si arriva a un livello
-(caselle d'esempio con il segno, la condizione, due righe di testo); si riapre con "Spiegazione
+(caselle d'esempio con il segno, la condizione, una frase breve per voce: dove va il segno e quale); si riapre con "Spiegazione
 del livello", anche in Allenamento. I livelli spiegati si ricordano.
 Trofeo: superato anche l'ultimo livello (3 esercizi risolti nel Percorso) si conquista una coppa
 d'oro con ∞ inciso. Compare in una finestra dopo il grafico dell'esercizio che lo fa vincere, con
 la data; poi resta come tasto "Trofeo" accanto alle modalità e la riapre.
 Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
 L'avanzamento resta nel browser (localStorage).
+Orientamento: in verticale scacchiera sopra e pannello sotto; in orizzontale (telefono girato, tablet, PC)
+scacchiera a sinistra alta quanto lo schermo, ferma mentre il pannello a destra scorre. Sugli schermi bassi
+pannello e finestre più fitti (nella spiegazione figura, condizione e testo su una riga).
+È anche un laboratorio di Compasso (iframe, argomento Continuità e asintoti).
 Due modalità: Percorso (livelli in ordine, si sbloccano) e Allenamento (qualunque livello, conta
 solo gli esercizi della visita e non tocca il percorso). La modalità scelta si ricorda.
 
