@@ -64,6 +64,10 @@ a destra è largo quanto avanza, da 270 a 420 px). Pannello compatto: riga dei l
 casetta (pagina iniziale), nome del livello e avanzamento su una riga, condizioni su due colonne, strumenti,
 tasti Controlla / Soluzione / Nuovo / Prossimo, messaggio breve. Sotto i 600 px d'altezza tutto più fitto.
 Numeri della scacchiera e degli assi in grassetto, proporzionati al lato.
+Tablet e schermi grandi (almeno 700×700): pannello, finestre e pagina iniziale ingranditi del 30% (zoom);
+in orizzontale il pannello è più largo (420-520 px) e l'aiuto mette la scacchiera animata a sinistra.
+Nell'aiuto le condizioni sono grandi (23 px, 20 px sul telefono) e i valori di x e y in grassetto, perché
+si legga quale colonna e quale riga cerca la freccia.
 È anche un laboratorio di Compasso (iframe, argomento Continuità e asintoti).
 Pagina di partenza a ogni apertura: piccola scacchiera disegnata, titolo, e due scelte, Percorso (con
 "Si comincia dal livello 1" / "Riprendi dal livello n" / "Completato") e Allenamento; sotto, il tasto Trofeo

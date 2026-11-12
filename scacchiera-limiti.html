@@ -89,12 +89,12 @@
   .etichetta {
     display: grid;
     place-items: center;
-    font-size: clamp(10px, 4.3cqmin, 17px);
+    font-size: clamp(10px, 4.3cqmin, 22px);
     font-weight: 700;
     color: var(--etichetta);
     user-select: none;
   }
-  .etichetta.inf { font-size: clamp(12px, 5.4cqmin, 22px); }
+  .etichetta.inf { font-size: clamp(12px, 5.4cqmin, 27px); }
   .casella {
     border: 0;
     padding: 0;
@@ -313,7 +313,7 @@
     line-height: 1;
     margin-right: 0.2em;
   }
-  .lim sub { font-size: 0.6em; margin-top: 2px; }
+  .lim sub { font-size: 0.66em; margin-top: 2px; }
   .lim sup { font-size: 0.85em; vertical-align: 0.45em; line-height: 0; }
 
   .strumenti {
@@ -444,9 +444,12 @@
     flex-wrap: wrap;
     gap: 4px 20px;
     font-family: var(--formula);
-    font-size: 19px;
-    line-height: 1.5;
+    font-size: 23px;
+    line-height: 1.35;
   }
+  /* nell'aiuto i valori di x e di y devono leggersi bene: sono quelli che la freccia cerca */
+  .aiuto-cond .lim sub { font-size: 0.72em; }
+  .aiuto-cond .cx, .aiuto-cond .cy { font-weight: 700; }
   .aiuto-cond li { transition: opacity 300ms; }
   .aiuto-cond.in-corso li:not(.attiva) { opacity: 0.35; }
   .aiuto-cond li.vedi-x .cx, .aiuto-cond li.vedi-y .cy { outline: 2px solid var(--evidenziatore); outline-offset: 1px; border-radius: 2px; }
@@ -456,11 +459,11 @@
   @media (orientation: portrait) { .demo { max-width: min(300px, (100vh - 370px) * 0.867); max-width: min(300px, (100svh - 370px) * 0.867); } }
   #aiuto-testo { grid-area: testo; margin: 0; font-size: 14px; line-height: 1.5; }
   .aiuto .azioni { grid-area: azioni; margin-top: 0; }
-  .demo text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 4.6px; font-weight: 700; fill: var(--etichetta); }
-  .demo text.inf { font-size: 5.4px; }
+  .demo text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 5.6px; font-weight: 700; fill: var(--etichetta); }
+  .demo text.inf { font-size: 6.2px; }
   body.colori .demo .lx { fill: var(--asse-x); }
   body.colori .demo .ly { fill: var(--asse-y); }
-  .demo .num text { font-size: 3.8px; fill: var(--inchiostro-tavola); stroke: var(--carta-inf); stroke-width: 0.9px; paint-order: stroke; }
+  .demo .num text { font-size: 4.6px; fill: var(--inchiostro-tavola); stroke: var(--carta-inf); stroke-width: 0.9px; paint-order: stroke; }
   .demo .banda { opacity: 0; transition: opacity 300ms; fill: var(--evidenziatore); fill-opacity: 0.4; }
   .demo .banda.su { opacity: 1; }
   body.colori .demo .banda.col { fill: #1F5FBF; fill-opacity: 0.28; }
@@ -509,6 +512,29 @@
     .condizioni li { min-height: 30px; font-size: 17px; }
     .strumento { height: 36px; padding: 4px; }
     .pannello .azioni button { min-height: 36px; }
+  }
+  /* telefono: le condizioni dell'aiuto un filo più piccole, così ne stanno due per riga */
+  @media (max-height: 700px), (max-width: 400px) { .aiuto-cond { font-size: 20px; gap: 0 10px; } }
+
+  /* tablet e schermi grandi: le scritte e i tasti del pannello, delle finestre e della pagina
+     iniziale crescono in proporzione (zoom), la scacchiera si prende il resto */
+  @media (min-width: 700px) and (min-height: 700px) {
+    .pannello, .spiegazione, .partenza > * { zoom: 1.3; }
+    .spiegazione { max-height: calc((100svh - 32px) / 1.3); }
+    .spiegazione.aiuto { width: min((100vw - 32px) / 1.3, 470px); }
+    .partenza { width: min(100vw - 32px, 680px); }
+  }
+  @media (orientation: landscape) and (min-width: 700px) and (min-height: 700px) {
+    main { grid-template-columns: minmax(0, 1fr) clamp(420px, 100vw - 100svh + 40px, 520px); }
+    /* finestra d'aiuto: scacchiera animata a sinistra, il resto a destra */
+    .spiegazione.aiuto { width: min((100vw - 32px) / 1.3, 720px); }
+    .spiegazione.aiuto[open] {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr auto;
+      grid-template-areas: "demo testa" "demo cond" "demo testo" "demo azioni";
+      column-gap: 20px;
+    }
+    .demo { width: auto; max-width: none; height: min((100svh - 80px) / 1.3, 400px); }
   }
 
   /* ---------- pagina di partenza ---------- */
@@ -1437,7 +1463,7 @@
       passi: [["cond", 0], ["colonna", 2], ["riga", 8], ["strumento", "verticale"], ["tocca", 2, 8, "s"], ["tocca", 2, 8, "d"], ["grafico"]],
       rami: [[u => 4.5 + 0.875 / (2.5 - u), 1, 2.25], [u => 4.5 + 0.875 / (u - 2.5), 2.75, 8]], asintoti: [["v", 2.5]] },
     { cond: [`${lim(5, "s")} = ${ny(8)}`, `${lim(5, "d")} = ${ny(0)}`, `${lim(MENO_INF)} = ${ny(8)}`, `${lim(PIU_INF)} = ${ny(8)}`],
-      testo: `Meno: solo la metà sinistra. Più: solo la metà destra. Infinito all'infinito: angolo, in salita o in discesa come va la funzione.`,
+      testo: `Meno: metà sinistra. Più: metà destra. Infinito all'infinito: nell'angolo, in salita o in discesa.`,
       passi: [["cond", 0], ["colonna", 5], ["riga", 8], ["strumento", "verticale"], ["tocca", 5, 8, "s"],
               ["cond", 1], ["colonna", 5], ["riga", 0], ["tocca", 5, 0, "d"],
               ["cond", 2], ["strumento", "scende"], ["tocca", 0, 8],
