@@ -360,6 +360,13 @@
   .pannello .azioni button { flex: 1 1 auto; min-height: 40px; padding: 0 8px; font-size: 14px; white-space: nowrap; }
   .messaggio { margin: 0; min-height: 1.35em; font-size: 13px; line-height: 1.35; }
   .messaggio.risolto { color: var(--giusto); font-weight: 600; }
+  /* versione: piccola e grigia, in ogni schermata */
+  .versione { margin: 0; font-size: 11px; color: var(--etichetta); opacity: 0.8; white-space: nowrap; }
+  .partenza .versione { text-align: center; }
+  /* nel gioco sta nell'angolo in basso a destra della scacchiera, che è vuoto */
+  .tavola .versione { position: absolute; right: 0; bottom: 0; font-size: clamp(8px, 2.4cqmin, 12px); pointer-events: none; }
+  .aiuto-testa { position: relative; }
+  .aiuto-testa .versione { position: absolute; top: 0; right: 0; }
   .collegamento {
     font: inherit;
     font-size: 13px;
@@ -585,7 +592,7 @@
   @media (orientation: landscape) and (min-width: 560px) {
     .partenza { width: min(100vw - 32px, 820px); grid-template-columns: auto minmax(0, 1fr); column-gap: 32px; align-items: center; }
     .partenza .disegno { grid-row: 1 / span 3; width: min(100vh - 64px, 300px); width: min(100svh - 64px, 300px, 40vw); }
-    .partenza h1, .partenza .sotto { text-align: left; }
+    .partenza h1, .partenza .sotto, .partenza .versione { text-align: left; }
     .piede { justify-content: flex-start; }
   }
   @media (orientation: landscape) and (max-height: 460px) {
@@ -667,9 +674,10 @@
     <button class="segno-trofeo" id="pa-trofeo" hidden aria-label="Trofeo del percorso"></button>
     <button class="collegamento" id="ricomincia" hidden>Ricomincia il percorso</button>
   </div>
+  <p class="versione"></p>
 </section>
 <main>
-  <div class="campo"><div class="tavola" id="tavola" aria-label="Scacchiera 9 per 9"></div></div>
+  <div class="campo"><div class="tavola" id="tavola" aria-label="Scacchiera 9 per 9"><p class="versione"></p></div></div>
 
   <section class="pannello">
     <div class="testa">
@@ -690,7 +698,7 @@
   </section>
 </main>
 <dialog class="spiegazione aiuto" id="spiegazione" aria-labelledby="sp-titolo">
-  <div class="aiuto-testa"><p class="sp-numero" id="sp-numero"></p><h2 class="sp-titolo" id="sp-titolo"></h2></div>
+  <div class="aiuto-testa"><p class="versione"></p><p class="sp-numero" id="sp-numero"></p><h2 class="sp-titolo" id="sp-titolo"></h2></div>
   <ul class="aiuto-cond" id="aiuto-cond"></ul>
   <div id="aiuto-demo"></div>
   <p id="aiuto-testo"></p>
@@ -725,6 +733,10 @@
     const v = i - 4;
     return v < 0 ? "−" + -v : String(v);
   }
+
+  // versione del gioco: si alza a ogni pubblicazione
+  const VERSIONE = "1.17";
+  document.querySelectorAll(".versione").forEach(el => el.textContent = "v" + VERSIONE);
 
   // ---------- segni ----------
   const SEGNI = {

@@ -58,6 +58,8 @@ Vinto il trofeo il percorso si azzera da solo e, chiusa la finestra, si riparte 
 livello 1, azzera gli esercizi risolti e le spiegazioni viste; i trofei restano.
 Livelli 1-5: valori di x in blu, valori di y in rosso, su etichette e condizioni.
 L'avanzamento resta nel browser (localStorage).
+Versione ("v1.NN", piccola e grigia) in ogni schermata: sotto la pagina iniziale, nell'angolo in basso a destra
+della scacchiera, in alto a destra nella finestra d'aiuto. Si alza a ogni pubblicazione.
 Tutto in uno schermo, senza scorrere, anche nell'iframe di Compasso (telefono: 360×535). La scacchiera è
 quadrata e prende lo spazio che resta: in verticale sopra il pannello, in orizzontale a sinistra (il pannello
 a destra è largo quanto avanza, da 270 a 420 px). Pannello compatto: riga dei livelli con "?" (aiuto) e
