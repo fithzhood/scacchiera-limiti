@@ -65,7 +65,9 @@ casetta (pagina iniziale), nome del livello e avanzamento su una riga, condizion
 tasti Controlla / Soluzione / Nuovo / Prossimo, messaggio breve. Sotto i 600 px d'altezza tutto più fitto.
 Numeri della scacchiera e degli assi in grassetto, proporzionati al lato.
 Tablet e schermi grandi (almeno 700×700): pannello, finestre e pagina iniziale ingranditi del 30% (zoom);
-in orizzontale il pannello è più largo (420-520 px) e l'aiuto mette la scacchiera animata a sinistra.
+in orizzontale il pannello è più largo (420-520 px).
+Finestra d'aiuto grande quanto lo schermo (12 px di margine, al massimo 640 px di larghezza in verticale):
+la scacchiera animata si prende lo spazio che resta; in orizzontale sta a sinistra, alta quanto la finestra.
 Nell'aiuto le condizioni sono grandi (23 px, 20 px sul telefono) e i valori di x e y in grassetto, perché
 si legga quale colonna e quale riga cerca la freccia.
 È anche un laboratorio di Compasso (iframe, argomento Continuità e asintoti).

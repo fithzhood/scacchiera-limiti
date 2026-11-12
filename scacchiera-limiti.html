@@ -427,7 +427,7 @@
   .spiegazione .sp-titolo { margin: 2px 0 6px; font-size: 18px; font-weight: 600; color: var(--inchiostro); }
   .spiegazione .azioni { justify-content: flex-end; margin-top: 4px; }
   /* finestra d'aiuto: condizioni, una piccola scacchiera animata, una frase */
-  .spiegazione.aiuto { width: min(100vw - 32px, 360px); padding: 16px 18px 14px; }
+  .spiegazione.aiuto { padding: 16px 18px 14px; }
   .spiegazione.aiuto[open] {
     display: grid;
     grid-template-areas: "testa" "cond" "demo" "testo" "azioni";
@@ -454,9 +454,7 @@
   .aiuto-cond.in-corso li:not(.attiva) { opacity: 0.35; }
   .aiuto-cond li.vedi-x .cx, .aiuto-cond li.vedi-y .cy { outline: 2px solid var(--evidenziatore); outline-offset: 1px; border-radius: 2px; }
   #aiuto-demo { grid-area: demo; }
-  .demo { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto; }
   /* telefono basso in verticale: la scacchiera animata si stringe per lasciare posto al resto */
-  @media (orientation: portrait) { .demo { max-width: min(300px, (100vh - 370px) * 0.867); max-width: min(300px, (100svh - 370px) * 0.867); } }
   #aiuto-testo { grid-area: testo; margin: 0; font-size: 14px; line-height: 1.5; }
   .aiuto .azioni { grid-area: azioni; margin-top: 0; }
   .demo text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 5.6px; font-weight: 700; fill: var(--etichetta); }
@@ -491,17 +489,6 @@
     .spiegazione { padding: 12px 18px 10px; }
     .trofeo svg { width: 76px; height: 76px; margin: 0 auto 4px; }
   }
-  /* basso e largo: la scacchiera animata a sinistra, il resto a destra */
-  @media (max-height: 520px) and (min-width: 560px) {
-    .spiegazione.aiuto { width: min(100vw - 32px, 640px); }
-    .spiegazione.aiuto[open] {
-      grid-template-columns: auto minmax(0, 1fr);
-      grid-template-rows: auto auto 1fr auto;
-      grid-template-areas: "demo testa" "demo cond" "demo testo" "demo azioni";
-      column-gap: 20px;
-    }
-    .demo { width: auto; max-width: none; height: min(100vh - 64px, 360px); height: min(100svh - 64px, 360px); }
-  }
   /* schermo basso (telefono, iframe di Compasso, telefono girato): pannello più fitto */
   @media (max-height: 600px) {
     main { padding: 8px 12px; gap: 8px; }
@@ -521,20 +508,37 @@
   @media (min-width: 700px) and (min-height: 700px) {
     .pannello, .spiegazione, .partenza > * { zoom: 1.3; }
     .spiegazione { max-height: calc((100svh - 32px) / 1.3); }
-    .spiegazione.aiuto { width: min((100vw - 32px) / 1.3, 470px); }
     .partenza { width: min(100vw - 32px, 680px); }
   }
   @media (orientation: landscape) and (min-width: 700px) and (min-height: 700px) {
     main { grid-template-columns: minmax(0, 1fr) clamp(420px, 100vw - 100svh + 40px, 520px); }
-    /* finestra d'aiuto: scacchiera animata a sinistra, il resto a destra */
-    .spiegazione.aiuto { width: min((100vw - 32px) / 1.3, 720px); }
+  }
+
+  /* finestra d'aiuto grande quanto lo schermo permette (12 px di margine): la scacchiera animata
+     si prende lo spazio che resta. --z è lo zoom della finestra (1,3 su tablet): le misure prese
+     dallo schermo vanno divise per lui */
+  .spiegazione.aiuto {
+    --z: 1;
+    --alto: min((100vh - 24px) / var(--z), 900px);
+    --alto: min((100svh - 24px) / var(--z), 900px);
+    width: min((100vw - 24px) / var(--z), 640px);
+    height: var(--alto);
+    max-width: none;
+    max-height: none;
+  }
+  .spiegazione.aiuto[open] { grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
+  #aiuto-demo { position: relative; min-height: 0; }
+  .demo { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+  @media (min-width: 700px) and (min-height: 700px) { .spiegazione.aiuto { --z: 1.3; } }
+  /* in orizzontale: la scacchiera animata a sinistra, alta quanto la finestra; il resto a destra */
+  @media (orientation: landscape) and (min-width: 560px) {
+    .spiegazione.aiuto { --demo: calc((var(--alto) - 30px) * 0.867); width: min((100vw - 24px) / var(--z), var(--demo) + 500px); }
     .spiegazione.aiuto[open] {
-      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-columns: var(--demo) minmax(0, 1fr);
       grid-template-rows: auto auto 1fr auto;
       grid-template-areas: "demo testa" "demo cond" "demo testo" "demo azioni";
-      column-gap: 20px;
+      column-gap: 24px;
     }
-    .demo { width: auto; max-width: none; height: min((100svh - 80px) / 1.3, 400px); }
   }
 
   /* ---------- pagina di partenza ---------- */
