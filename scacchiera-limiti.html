@@ -304,6 +304,35 @@
     white-space: nowrap;
   }
   .condizioni li .esito { width: 14px; height: 14px; }
+  /* le condizioni si toccano per vederle ingrandite */
+  .condizioni li { cursor: zoom-in; border-radius: 4px; -webkit-tap-highlight-color: transparent; }
+  .condizioni li:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 1px; }
+  @media (hover: hover) { .condizioni li:hover { background: rgba(127, 140, 150, 0.14); } }
+  .lente {
+    border: 0;
+    padding: 0.35em 0.6em 0.45em;
+    max-width: calc(100vw - 24px);
+    border-radius: 10px;
+    background: var(--fondo);
+    color: var(--inchiostro);
+    font-family: var(--formula);
+    font-size: min(12vw, 12vh, 80px);
+    line-height: 1.15;
+    white-space: nowrap;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    outline: 2px solid var(--etichetta);
+    cursor: zoom-out;
+  }
+  .lente.giusto { outline-color: var(--giusto); }
+  .lente.sbagliato { outline-color: var(--sbagliato); }
+  .lente::backdrop { background: rgba(21, 27, 33, 0.55); }
+  .lente[open] { animation: lente 260ms cubic-bezier(0.2, 1, 0.3, 1); }
+  /* parte dalla condizione toccata (--dx, --dy, --s) e arriva al centro */
+  @keyframes lente {
+    from { transform: translate(var(--dx, 0), var(--dy, 0)) scale(var(--s, 0.4)); opacity: 0.4; }
+    to   { transform: none; opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .lente[open] { animation: none; } }
   .condizioni li.giusto .esito { color: var(--giusto); }
   .condizioni li.sbagliato .esito { color: var(--sbagliato); }
   .lim {
@@ -700,6 +729,7 @@
     <p class="messaggio" id="messaggio" aria-live="polite"></p>
   </section>
 </main>
+<dialog class="lente" id="lente" aria-label="Condizione ingrandita"></dialog>
 <dialog class="spiegazione aiuto" id="spiegazione" aria-labelledby="sp-titolo">
   <div class="aiuto-testa"><p class="versione"></p><p class="sp-numero" id="sp-numero"></p><h2 class="sp-titolo" id="sp-titolo"></h2></div>
   <ul class="aiuto-cond" id="aiuto-cond"></ul>
@@ -738,7 +768,7 @@
   }
 
   // versione del gioco: si alza a ogni pubblicazione
-  const VERSIONE = "1.18";
+  const VERSIONE = "1.19";
   document.querySelectorAll(".versione").forEach(el => el.textContent = "v" + VERSIONE);
 
   // ---------- segni ----------
@@ -1206,6 +1236,28 @@
   let bloccato = false;
   const elCond = document.getElementById("condizioni");
   const elMsg = document.getElementById("messaggio");
+  // lente: una condizione toccata compare grande al centro, crescendo dal punto in cui stava;
+  // un altro tocco (dovunque) la chiude
+  const lente = document.getElementById("lente");
+  function ingrandisci(li) {
+    lente.innerHTML = li.lastElementChild.innerHTML;
+    lente.className = "lente " + li.className;
+    lente.style.fontSize = "";
+    lente.showModal();
+    // se è più larga dello schermo, il carattere si riduce quanto basta
+    const troppo = lente.scrollWidth / lente.clientWidth;
+    if (troppo > 1) lente.style.fontSize = `${parseFloat(getComputedStyle(lente).fontSize) / troppo * 0.97}px`;
+    const a = li.getBoundingClientRect(), b = lente.getBoundingClientRect();
+    lente.style.setProperty("--dx", `${a.left + a.width / 2 - (b.left + b.width / 2)}px`);
+    lente.style.setProperty("--dy", `${a.top + a.height / 2 - (b.top + b.height / 2)}px`);
+    lente.style.setProperty("--s", Math.min(1, a.width / b.width).toFixed(3));
+  }
+  elCond.addEventListener("click", e => { const li = e.target.closest("li"); if (li) ingrandisci(li); });
+  elCond.addEventListener("keydown", e => {
+    const li = e.target.closest("li");
+    if (li && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); ingrandisci(li); }
+  });
+  lente.addEventListener("click", () => lente.close());
   const btnControlla = document.getElementById("controlla");
   const btnSoluzione = document.getElementById("soluzione");
   const MSG_INIZIO = "Un segno per condizione, poi Controlla.";
@@ -1354,7 +1406,7 @@
     mostraLivello();
     condizioni = genera(LIVELLI[livello()]);
     segni.clear();
-    elCond.innerHTML = condizioni.map(c => `<li><span class="esito"></span><span>${c.html}</span></li>`).join("");
+    elCond.innerHTML = condizioni.map(c => `<li tabindex="0" title="Tocca per ingrandire"><span class="esito"></span><span>${c.html}</span></li>`).join("");
     blocca(false);
     pulisciEsito();
     disegnaTutto();

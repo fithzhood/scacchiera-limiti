@@ -68,6 +68,9 @@ tasti Controlla / Soluzione / Nuovo / Prossimo, messaggio breve. Sotto i 600 px 
 Numeri della scacchiera e degli assi in grassetto, proporzionati al lato.
 Pedice dei limiti (x → a) grande (0,8 della formula) e seminero; il segno del lato (− sinistra, + destra)
 in grassetto, grande quanto il pedice.
+Lente: toccando una condizione del pannello compare grande al centro dello schermo (fino a 80 px, ridotta
+se non ci sta), crescendo dal punto in cui stava; il bordo è verde o rosso se è già stata controllata.
+Un altro tocco, dovunque, la chiude senza piazzare segni.
 Tablet e schermi grandi (almeno 700×700): pannello, finestre e pagina iniziale ingranditi del 30% (zoom);
 in orizzontale il pannello è più largo (420-520 px).
 Finestra d'aiuto grande quanto lo schermo (12 px di margine, al massimo 640 px di larghezza in verticale):
