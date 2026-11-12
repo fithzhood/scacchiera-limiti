@@ -66,6 +66,8 @@ a destra è largo quanto avanza, da 270 a 420 px). Pannello compatto: riga dei l
 casetta (pagina iniziale), nome del livello e avanzamento su una riga, condizioni su due colonne, strumenti,
 tasti Controlla / Soluzione / Nuovo / Prossimo, messaggio breve. Sotto i 600 px d'altezza tutto più fitto.
 Numeri della scacchiera e degli assi in grassetto, proporzionati al lato.
+Pedice dei limiti (x → a) grande (0,8 della formula) e seminero; il segno del lato (− sinistra, + destra)
+in grassetto, grande quanto il pedice.
 Tablet e schermi grandi (almeno 700×700): pannello, finestre e pagina iniziale ingranditi del 30% (zoom);
 in orizzontale il pannello è più largo (420-520 px).
 Finestra d'aiuto grande quanto lo schermo (12 px di margine, al massimo 640 px di larghezza in verticale):

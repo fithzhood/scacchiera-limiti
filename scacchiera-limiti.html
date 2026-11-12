@@ -313,8 +313,9 @@
     line-height: 1;
     margin-right: 0.2em;
   }
-  .lim sub { font-size: 0.66em; margin-top: 2px; }
-  .lim sup { font-size: 0.85em; vertical-align: 0.45em; line-height: 0; }
+  /* il pedice x → a deve leggersi bene, e il segno del lato (− sinistra, + destra) ancora di più */
+  .lim sub { font-size: 0.8em; margin-top: 1px; font-weight: 600; white-space: nowrap; }
+  .lim sup { font-size: 1em; font-weight: 700; vertical-align: 0.3em; line-height: 0; margin-left: 1px; }
 
   .strumenti {
     display: grid;
@@ -413,6 +414,8 @@
   .tasto-aiuto b { font-weight: 400; }
   /* pannello stretto: dell'aiuto resta il tondo col punto di domanda */
   @container (max-width: 400px) { .tasto-aiuto { padding: 0 4px; } .tasto-aiuto b, .azioni .lungo { display: none; } }
+  /* pannello strettissimo (telefono girato): condizioni un po' più piccole, così stanno in due colonne */
+  @container (max-width: 300px) { .pannello .condizioni { column-gap: 6px; } .pannello .condizioni li { font-size: 15.5px; grid-template-columns: 14px 1fr; } }
   .demo .confine { stroke: var(--inchiostro-tavola); stroke-width: 0.3; stroke-dasharray: 0.6 1.2; opacity: 0.5; }
   .demo .tacca { stroke: var(--inchiostro-tavola); stroke-width: 0.32; }
   .collegamento:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
@@ -455,7 +458,7 @@
     line-height: 1.35;
   }
   /* nell'aiuto i valori di x e di y devono leggersi bene: sono quelli che la freccia cerca */
-  .aiuto-cond .lim sub { font-size: 0.72em; }
+  .aiuto-cond .lim sub { font-size: 0.8em; }
   .aiuto-cond .cx, .aiuto-cond .cy { font-weight: 700; }
   .aiuto-cond li { transition: opacity 300ms; }
   .aiuto-cond.in-corso li:not(.attiva) { opacity: 0.35; }
@@ -735,7 +738,7 @@
   }
 
   // versione del gioco: si alza a ogni pubblicazione
-  const VERSIONE = "1.17";
+  const VERSIONE = "1.18";
   document.querySelectorAll(".versione").forEach(el => el.textContent = "v" + VERSIONE);
 
   // ---------- segni ----------
