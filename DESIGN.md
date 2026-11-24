@@ -29,12 +29,17 @@ Assi sottili, così i tratteggi che cadono sugli assi si vedono. Senza condizion
 
 ## Livelli (3 esercizi risolti per passare al successivo, la soluzione mostrata non conta)
 1 Valori · 2 Valori e limiti al finito · 3 Asintoti orizzontali · 4 Asintoti verticali ·
-5 Limiti laterali e limiti infiniti all'infinito · 6 tutto, senza colori ·
-7 senza scacchiera, solo assi · 8 tutto, solo assi.
-Livelli 7-8: foglio uniforme, numeri e tacche sugli assi solo da −3 a +3 (sopra i segni, con alone);
+5 Limiti laterali · 6 Limiti infiniti all'infinito · 7 tutto, senza colori · 8 senza scacchiera, solo assi.
+(Fino alla v1.19 il 5 univa laterali e infiniti all'infinito e c'erano due livelli con gli assi quasi uguali:
+i salvataggi di prima vengono rinumerati, schema 2.)
+Avanzamento come le tappe di un mondo: accanto al nome del livello tre stelle, piene quelle risolte,
+cerchiata e pulsante quella che si sta giocando, vuote le altre; la stella conquistata arriva con un salto.
+Tre stelle piene e "Superato" a livello passato; sul tasto di ogni livello superato una stellina d'oro.
+In Allenamento al posto delle stelle "Allenamento · risolti n".
+Livello 8: foglio uniforme, numeri e tacche sugli assi solo da −3 a +3 (sopra i segni, con alone);
 ±∞ fuori dal piano, oltre le estremità degli assi, perché indicano una direzione e non un punto; una linea
 puntinata separa la fascia ±∞ dalla parte finita. Il tasto Prossimo livello compare a livello superato.
-Livelli 7-8, asintoti: i segni sono gli stessi dei livelli precedenti (tratteggi nelle metà delle caselle
+Livello 8, asintoti: i segni sono gli stessi dei livelli precedenti (tratteggi nelle metà delle caselle
 del bordo), ma le metà non sono separate da una linea. Al suo posto, se aiuta, si traccia l'asintoto: gli
 strumenti "Asintoto verticale" e "Asintoto orizzontale" (in fondo alla fila, in rosso) mettono una retta
 rossa tratteggiata su tutto il piano toccando un punto qualsiasi della colonna x = a o della riga y = b;
@@ -42,11 +47,12 @@ ritoccando si toglie. È un aiuto al disegno: il controllo non lo guarda (né gi
 resta anche quando si mostra la soluzione.
 Ogni esercizio usa la meccanica che il suo livello introduce: 2 un salto (limite e valore diversi
 nella stessa colonna), 3 un asintoto orizzontale, 4 un asintoto verticale, 5 una coppia di limiti
-laterali e un limite infinito all'infinito, 6-8 almeno un asintoto verticale e una condizione a x→±∞.
+laterali (niente angoli), 6 un limite infinito all'infinito, 7-8 almeno un asintoto verticale e una condizione a x→±∞.
 Aiuto del livello: piccola finestra con le condizioni d'esempio, una scacchiera in miniatura animata
 (una freccia legge la condizione, si accendono colonna e riga, sceglie lo strumento, piazza il segno, poi arriva il
 grafico; in ciclo) e una frase. Mostra solo la novità del livello (6: un valore letto senza colori;
-7: i tratteggi nelle metà, ciascuno preceduto dalla sua retta rossa facoltativa; l'8 non ha segni nuovi e ripete la scena del 7).
+5: le due metà del tratteggio verticale; 6: i due angoli, in discesa e in salita; 8: i tratteggi nelle metà, ciascuno
+preceduto dalla sua retta rossa facoltativa).
 Nel Percorso si apre da sola quando si arriva a un livello non ancora visto dall'ultimo azzeramento (anche
 dopo il trofeo); in Allenamento mai da sola, e aprirla lì non conta come vista. Il tasto "?" la richiama in
 entrambe le modalità. Senza movimento: scena finita, ferma.
@@ -92,7 +98,7 @@ solo gli esercizi della visita e non tocca il percorso). La modalità scelta si 
 - Evidenziatore #E0A526 — strumento scelto, focus
 - Giusto #2F7D4F, Sbagliato #C2412D, Soluzione #B8660B — solo dopo il controllo
 - Asse x #1F5FBF (blu), Asse y #C62D2D (rosso) — indizio nei livelli 1-5
-- Asintoti #C62D2D (rosso) — rette tratteggiate, piazzate a mano nei livelli 7-8 o mostrate col grafico
+- Asintoti #C62D2D (rosso) — rette tratteggiate, piazzate a mano nel livello 8 o mostrate col grafico
   (quelle già piazzate non si ripetono)
 - Funzione #0A6E6C — il grafico, con un alone chiaro per staccarsi dalle caselle
 

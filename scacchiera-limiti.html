@@ -279,7 +279,27 @@
   .tondo:focus-visible, .livelli button:focus-visible { outline: 2px solid var(--evidenziatore); outline-offset: 2px; }
   .livello-info { margin: 0; display: flex; gap: 10px; font-size: 13px; line-height: 1.35; }
   #livello-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-  .livello-info .avanzamento { flex: none; color: var(--etichetta); }
+  .livello-info { align-items: center; }
+  .livello-info .avanzamento { flex: none; color: var(--etichetta); display: inline-flex; align-items: center; gap: 3px; }
+  /* tappe del livello: stella piena = esercizio risolto, stella cerchiata = quello che si sta giocando */
+  .tappa { width: 20px; height: 20px; display: block; overflow: visible; }
+  .tappa path { fill: none; stroke: var(--etichetta); stroke-width: 1.6; stroke-linejoin: round; opacity: 0.55; }
+  .tappa.fatta path { fill: var(--evidenziatore); stroke: #A8730F; opacity: 1; }
+  .tappa.ora path { stroke: var(--evidenziatore); stroke-width: 2.2; opacity: 1; }
+  .tappa.ora { animation: tappa-ora 1.4s ease-in-out infinite; }
+  .tappa.nuova { animation: tappa-nuova 700ms cubic-bezier(0.2, 1.6, 0.4, 1); }
+  @keyframes tappa-ora { 50% { transform: scale(1.18); } }
+  @keyframes tappa-nuova { from { transform: scale(0.2) rotate(-90deg); } 60% { transform: scale(1.5); } to { transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .tappa.ora, .tappa.nuova { animation: none; } }
+  .avanzamento .dida { margin-left: 4px; font-weight: 600; }
+  .avanzamento .dida.ok { color: var(--giusto); }
+  /* livelli superati: una stellina d'oro sul tasto */
+  .livelli button { position: relative; }
+  .livelli button.superato::after {
+    content: "★"; position: absolute; top: -7px; right: -4px;
+    font-size: 13px; line-height: 1; color: var(--evidenziatore);
+    text-shadow: 0 0 2px var(--fondo), 0 0 2px var(--fondo);
+  }
   h2 {
     margin: 0 0 8px;
     font-size: 13px;
@@ -768,7 +788,7 @@
   }
 
   // versione del gioco: si alza a ogni pubblicazione
-  const VERSIONE = "1.19";
+  const VERSIONE = "1.20";
   document.querySelectorAll(".versione").forEach(el => el.textContent = "v" + VERSIONE);
 
   // ---------- segni ----------
@@ -972,11 +992,11 @@
     { nome: "Valori e limiti al finito",        colori: true,  colonne: 4, tipi: ["val", "val", "lim", "salto"], bordi: 0, min: 4, max: 5, richiede: ["salto"] },
     { nome: "Asintoti orizzontali",             colori: true,  colonne: 3, tipi: ["val", "lim", "salto"], bordi: 0.8, min: 4, max: 6, richiede: ["oriz"] },
     { nome: "Asintoti verticali",               colori: true,  colonne: 3, tipi: ["val", "lim", "asintoto", "asintoto"], bordi: 0.6, min: 4, max: 6, richiede: ["vert"] },
-    { nome: "Limiti laterali e limiti infiniti all'infinito", colori: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6, richiede: ["laterali", "obl"] },
+    { nome: "Limiti laterali",                  colori: true,  colonne: 3, tipi: ["val", "lim", "asintoto", "asintoto"], bordi: 0.5, laterali: true, min: 4, max: 6, richiede: ["laterali"] },
+    { nome: "Limiti infiniti all'infinito",     colori: true,  colonne: 3, tipi: ["val", "lim", "salto", "asintoto"], bordi: 0.95, obl: true, laterali: true, min: 4, max: 6, richiede: ["obl"] },
     { nome: "Tutto insieme, senza colori",      colori: false, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6, richiede: ["vert", "bordo"] },
     // assi: niente scacchiera, solo assi cartesiani numerati
-    { nome: "Senza scacchiera, solo assi",      colori: false, assi: true, colonne: 3, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.75, obl: true, laterali: true, min: 4, max: 6, richiede: ["vert", "bordo"] },
-    { nome: "Tutto insieme, solo assi",         colori: false, assi: true, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6, richiede: ["vert", "bordo"] },
+    { nome: "Senza scacchiera, solo assi",      colori: false, assi: true, colonne: 4, tipi: ["val", "lim", "salto", "asintoto", "asintoto"], bordi: 0.85, obl: true, laterali: true, min: 5, max: 6, richiede: ["vert", "bordo"] },
   ];
   // la meccanica che un livello introduce compare in ogni suo esercizio
   const HA = {
@@ -1280,6 +1300,20 @@
   // modo "allenamento": qualunque livello (livAll), senza toccare l'avanzamento del percorso.
   let prog = { modo: "percorso", liv: 0, livAll: 0, massimo: 0, risolti: [] };
   try { Object.assign(prog, JSON.parse(localStorage.getItem(CHIAVE)) || {}); } catch {}
+  // schema 2: il vecchio livello 5 (laterali e infiniti all'infinito) è diventato due livelli, 5 e 6,
+  // e dei due livelli con gli assi ne resta uno. Vecchio indice -> nuovo.
+  if (prog.schema !== 2) {
+    const DA = [0, 1, 2, 3, 4, 6, 7, 7], vecchi = Array.isArray(prog.risolti) ? prog.risolti : [];
+    const r = [0, 0, 0, 0, 0, 0, 0, 0];
+    [0, 1, 2, 3, 4, 5, 7].forEach(i => { r[DA[i]] = vecchi[i] | 0; });   // il vecchio 7 apriva solo l'8
+    prog.massimo = DA[clamp(prog.massimo | 0, 0, 7)];
+    if (prog.massimo > 5) r[5] = Math.max(r[5], PER_LIVELLO);           // il nuovo 6 era già nel vecchio 5
+    prog.risolti = r;
+    prog.liv = DA[clamp(prog.liv | 0, 0, 7)];
+    prog.livAll = DA[clamp(prog.livAll | 0, 0, 7)];
+    if (Array.isArray(prog.spiegati)) prog.spiegati = [...new Set(prog.spiegati.filter(Number.isInteger).map(i => DA[clamp(i, 0, 7)]))];
+    prog.schema = 2;
+  }
   prog.massimo = clamp(prog.massimo | 0, 0, LIVELLI.length - 1);
   prog.liv = clamp(prog.liv | 0, 0, prog.massimo);
   prog.livAll = clamp(prog.livAll | 0, 0, LIVELLI.length - 1);
@@ -1324,7 +1358,29 @@
     elLivelli.append(b);
   });
 
-  function mostraLivello() {
+  // tre stelle per livello (come le tappe di un mondo): piene quelle risolte, cerchiata quella in gioco;
+  // appena = indice della stella appena conquistata, che arriva con un salto
+  const STELLA = '<path d="M10 1.8l2.45 5.2 5.65.7-4.15 3.9 1.05 5.6L10 14.45 4.95 17.2 6 11.6 1.85 7.7l5.65-.7z"/>';
+  function mostraTappe(appena) {
+    const el = document.getElementById("avanzamento");
+    if (allenamento()) {
+      el.innerHTML = `<span class="dida">Allenamento · risolti ${risoltiAllenamento}</span>`;
+      el.removeAttribute("aria-label");
+      return;
+    }
+    const n = Math.min(prog.risolti[prog.liv], PER_LIVELLO), ora = appena >= 0 || n >= PER_LIVELLO ? -1 : n;
+    let s = "";
+    for (let i = 0; i < PER_LIVELLO; i++) {
+      const stato = i < n ? "fatta" : i === ora ? "ora" : "dopo";
+      s += `<svg class="tappa ${stato}${i === appena ? " nuova" : ""}" viewBox="0 0 20 20" aria-hidden="true">${STELLA}</svg>`;
+    }
+    if (n >= PER_LIVELLO) s += `<span class="dida ok">Superato</span>`;
+    el.innerHTML = s;
+    el.setAttribute("aria-label", n >= PER_LIVELLO ? "Livello superato"
+      : `Esercizio ${n + 1} di ${PER_LIVELLO}, risolti ${n}`);
+  }
+
+  function mostraLivello(appena = -1) {
     const L = LIVELLI[livello()];
     document.body.classList.toggle("colori", L.colori);
     document.body.classList.toggle("solo-assi", !!L.assi);
@@ -1332,15 +1388,12 @@
     [...elLivelli.children].forEach((b, i) => {
       const chiuso = !allenamento() && i > prog.massimo;
       b.setAttribute("aria-pressed", i === livello());
+      b.classList.toggle("superato", !allenamento() && prog.risolti[i] >= PER_LIVELLO);
       b.disabled = chiuso;
       b.title = chiuso ? "Si sblocca superando il livello precedente" : LIVELLI[i].nome;
     });
     document.getElementById("livello-nome").textContent = L.nome;
-    const n = prog.risolti[prog.liv];
-    document.getElementById("avanzamento").textContent =
-      allenamento() ? `Allenamento · risolti ${risoltiAllenamento}`
-      : superato() ? `Superato · risolti ${n}`
-      : `${n} di ${PER_LIVELLO}`;
+    mostraTappe(appena);
     btnProssimo.hidden = !superato();
   }
 
@@ -1509,7 +1562,7 @@
   // livelli solo assi: i tratteggi come prima; in più, se si vuole, la retta rossa dell'asintoto
   const SCENA_ASSI = {
     cond: [`${lim(2)} = ${ny(8)}`, `${lim(PIU_INF)} = ${ny(3)}`],
-    testo: `Tratteggi nelle metà, come sulla scacchiera. Se aiuta, traccia prima l'asintoto (rosso): non conta nel controllo.`,
+    testo: `Solo gli assi: i segni vanno dove andrebbero sulla scacchiera. Se aiuta, traccia prima l'asintoto (rosso): non conta nel controllo.`,
     passi: [["cond", 0], ["colonna", 2], ["riga", 8], ["strumento", "asintotoV"], ["tocca", 2, 6],
             ["strumento", "verticale"], ["tocca", 2, 8, "s"], ["tocca", 2, 8, "d"],
             ["cond", 1], ["colonna", 8], ["riga", 3], ["strumento", "asintotoO"], ["tocca", 6, 3],
@@ -1533,19 +1586,21 @@
       testo: `Limite ±∞: riga sul bordo. Tratteggio verticale in tutte e due le metà.`,
       passi: [["cond", 0], ["colonna", 2], ["riga", 8], ["strumento", "verticale"], ["tocca", 2, 8, "s"], ["tocca", 2, 8, "d"], ["grafico"]],
       rami: [[u => 4.5 + 0.875 / (2.5 - u), 1, 2.25], [u => 4.5 + 0.875 / (u - 2.5), 2.75, 8]], asintoti: [["v", 2.5]] },
-    { cond: [`${lim(5, "s")} = ${ny(8)}`, `${lim(5, "d")} = ${ny(0)}`, `${lim(MENO_INF)} = ${ny(8)}`, `${lim(PIU_INF)} = ${ny(8)}`],
-      testo: `Meno: metà sinistra. Più: metà destra. Infinito all'infinito: nell'angolo, in salita o in discesa.`,
+    { cond: [`${lim(5, "s")} = ${ny(8)}`, `${lim(5, "d")} = ${ny(0)}`],
+      testo: `Meno (da sinistra): solo la metà sinistra del tratteggio. Più (da destra): solo la metà destra.`,
       passi: [["cond", 0], ["colonna", 5], ["riga", 8], ["strumento", "verticale"], ["tocca", 5, 8, "s"],
-              ["cond", 1], ["colonna", 5], ["riga", 0], ["tocca", 5, 0, "d"],
-              ["cond", 2], ["strumento", "scende"], ["tocca", 0, 8],
-              ["cond", 3], ["strumento", "sale"], ["tocca", 8, 8], ["grafico"]],
-      rami: [[u => 2.4 + 1.3 / (5.5 - u) + 2.6 / (u - 0.55), 1, 5.25], [u => 3 - 0.5 / (u - 5.5) + 0.83 * (u - 5.5) ** 2, 5.75, 8]], asintoti: [["v", 5.5]] },
+              ["cond", 1], ["colonna", 5], ["riga", 0], ["tocca", 5, 0, "d"], ["grafico"]],
+      rami: [[u => 4.5 + 0.875 / (5.5 - u), 1, 5.25], [u => 4.5 - 0.875 / (u - 5.5), 5.75, 8]], asintoti: [["v", 5.5]] },
+    { cond: [`${lim(MENO_INF)} = ${ny(8)}`, `${lim(PIU_INF)} = ${ny(8)}`],
+      testo: `<i>x</i> → ±∞ e <i>f</i> → ±∞: tratteggio nell'angolo, in discesa se la funzione scende, in salita se sale.`,
+      passi: [["cond", 0], ["colonna", 0], ["riga", 8], ["strumento", "scende"], ["tocca", 0, 8],
+              ["cond", 1], ["colonna", 8], ["riga", 8], ["strumento", "sale"], ["tocca", 8, 8], ["grafico"]],
+      rami: [[u => 2.5 + 0.449 * (u - 4.5) ** 2, 1, 8]] },
     { cond: [`${fDi(2)} = ${ny(5)}`],
       testo: `Niente colori. Dentro <i>f</i>( ) o sotto lim: la colonna. Dopo l'uguale: la riga.`,
       passi: [["cond", 0], ["colonna", 2], ["riga", 5], ["tocca", 2, 5], ["grafico"]],
       rami: [[u => 5.5 + 0.5 * (u - 2.5) - 0.15 * (u - 2.5) ** 2, 1, 8]] },
     SCENA_ASSI,
-    { ...SCENA_ASSI, testo: `Nessun segno nuovo: come il livello 7, con più condizioni.` },
   ];
 
   const dlg = document.getElementById("spiegazione");
@@ -1713,7 +1768,7 @@
         if (ultimoLivello() && prog.risolti[prog.liv] >= PER_LIVELLO) appenaFinito = true;
         if (!appenaFinito) salva();
       }
-      mostraLivello();
+      mostraLivello(allenamento() ? -1 : Math.min(prog.risolti[prog.liv], PER_LIVELLO) - 1);
       if (appenaFinito) {
         // il trofeo va in bacheca e il percorso si azzera subito, così resta anche se si chiude la pagina
         prog.trofei.push(oggi());
@@ -1721,7 +1776,7 @@
         salva();
         trofeoAppenaVinto = true;
         mostraBacheca();
-        document.getElementById("avanzamento").textContent = "Percorso completato";
+        document.getElementById("avanzamento").innerHTML = '<span class="dida ok">Percorso completato</span>';
       }
       elMsg.className = "messaggio risolto";
       elMsg.textContent = appenaFinito ? "Risolto. Percorso completato: si ricomincia dal livello 1."
