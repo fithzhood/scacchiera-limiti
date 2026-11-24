@@ -74,6 +74,7 @@ tasti Controlla / Soluzione / Nuovo / Prossimo, messaggio breve. Sotto i 600 px 
 Numeri della scacchiera e degli assi in grassetto, proporzionati al lato.
 Pedice dei limiti (x → a) grande (0,8 della formula) e seminero; il segno del lato (− sinistra, + destra)
 in grassetto, grande quanto il pedice.
+"lim" sempre allineato a sinistra, col pedice che parte dallo stesso punto, per quanto lungo sia.
 Lente: toccando una condizione del pannello compare grande al centro dello schermo (fino a 80 px, ridotta
 se non ci sta), crescendo dal punto in cui stava; il bordo è verde o rosso se è già stata controllata.
 Un altro tocco, dovunque, la chiude senza piazzare segni.

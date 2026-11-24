@@ -355,10 +355,11 @@
   @media (prefers-reduced-motion: reduce) { .lente[open] { animation: none; } }
   .condizioni li.giusto .esito { color: var(--giusto); }
   .condizioni li.sbagliato .esito { color: var(--sbagliato); }
+  /* "lim" sempre allineato a sinistra, col pedice sotto che parte dallo stesso punto */
   .lim {
     display: inline-flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     line-height: 1;
     margin-right: 0.2em;
   }
@@ -788,7 +789,7 @@
   }
 
   // versione del gioco: si alza a ogni pubblicazione
-  const VERSIONE = "1.20";
+  const VERSIONE = "1.21";
   document.querySelectorAll(".versione").forEach(el => el.textContent = "v" + VERSIONE);
 
   // ---------- segni ----------
